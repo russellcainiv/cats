@@ -9,12 +9,13 @@ describe('Gestation & Birth Logic', () => {
     const world = createTestWorldState();
     const pregnancy: PregnancyRecord = {
       id: 'preg_1',
+      parentIds: ['cat_dam', 'cat_sire'],
       damId: 'cat_dam',
       sireId: 'cat_sire',
-      conceptionSimMinute: 0,
-      dueSimMinute: 4320,
-      litterSize: 2,
-      resolved: false,
+      startedAtSimMinute: 0,
+      dueAtSimMinute: 4320,
+      reservedSlots: 2,
+      conceptionEventId: 'evt_conception_1',
     };
 
     world.lifecycle.pregnancies['preg_1'] = pregnancy;
@@ -29,7 +30,8 @@ describe('Gestation & Birth Logic', () => {
     if (!result.ok) return;
 
     const nextState = result.state;
-    expect(nextState.lifecycle.pregnancies['preg_1'].resolved).toBe(true);
+    // Completed pregnancy is removed from active map so reservations release cleanly
+    expect(nextState.lifecycle.pregnancies['preg_1']).toBeUndefined();
     expect(nextState.livingCatIds.length).toBe(4); // dam, sire, + 2 kittens
 
     const dam = nextState.cats['cat_dam'];
@@ -47,12 +49,13 @@ describe('Gestation & Birth Logic', () => {
     const world = createTestWorldState();
     const pregnancy: PregnancyRecord = {
       id: 'preg_2',
+      parentIds: ['cat_dam', 'cat_sire'],
       damId: 'cat_dam',
       sireId: 'cat_sire',
-      conceptionSimMinute: 0,
-      dueSimMinute: 4320,
-      litterSize: 3,
-      resolved: false,
+      startedAtSimMinute: 0,
+      dueAtSimMinute: 4320,
+      reservedSlots: 3,
+      conceptionEventId: 'evt_conception_2',
     };
     world.lifecycle.pregnancies['preg_2'] = pregnancy;
 
@@ -61,7 +64,8 @@ describe('Gestation & Birth Logic', () => {
 
     const { state: updatedState, events } = processGestationTick(world, 100);
 
-    expect(updatedState.lifecycle.pregnancies['preg_2'].resolved).toBe(true);
+    // Cancelled pregnancy is removed from active map to release reserved slots
+    expect(updatedState.lifecycle.pregnancies['preg_2']).toBeUndefined();
     expect(events.length).toBe(1);
     expect(events[0].type).toBe('PREGNANCY_CANCELLED');
     expect(events[0].payload.releasedSlots).toBe(3);

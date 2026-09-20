@@ -14,25 +14,8 @@ export const ALL_TRAITS: PersonalityTrait[] = [
   'adventurous',
 ];
 
-/**
- * Deterministic pseudo-random number generator (LCG) using world state's RNG seed/counter.
- * Returns a tuple of [randomValue (0..1), updatedRngState].
- */
-export function nextRng(rng: RngStateData): [number, RngStateData] {
-  const seed = rng.seed ?? 12345;
-  const counter = (rng.counter ?? 0) + 1;
-  // LCG step
-  const nextVal = (seed * 1664525 + counter * 1013904223) % 4294967296;
-  const normalized = Math.abs(nextVal) / 4294967296;
-
-  return [
-    normalized,
-    {
-      ...rng,
-      counter,
-    },
-  ];
-}
+export { nextRng, SeededRng, createRngAdapter, toRngStateData } from './rng';
+import { nextRng } from './rng';
 
 /**
  * Generate inherited appearance for a kitten from dam and sire using seeded PRNG.

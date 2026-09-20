@@ -17,6 +17,7 @@ export const WARNING_WINDOW_MINUTES = 120; // 2 sim hours warning window before 
 /**
  * Checks for hazards/neglect/illness on living cats, issues warning events,
  * and triggers preventable death if warning window expires without intervention.
+ * Invariant to batching: evaluates onset and expiration relative to elapsed sim interval.
  */
 export function processHazardsTick(
   state: WorldState,
@@ -69,7 +70,13 @@ export function processHazardsTick(
     }
 
     // Determine hazard category
-    let hazardType = health.hazardType || (health.isIll ? 'severe_illness' : 'extreme_neglect');
+    const hazardType = health.hazardType || (health.isIll ? 'severe_illness' : 'extreme_neglect');
+
+    // Onset timestamp is invariant to caller batching: onset begins at start of elapsed step if newly detected
+    let warningOnsetMinute = health.warningIssuedAtMinute;
+    if (warningOnsetMinute === undefined) {
+      warningOnsetMinute = Math.max(0, currentSimMinute - elapsedSimMinutes);
+    }
 
     // Issue warning if not yet issued
     if (!health.warningIssued) {
@@ -80,7 +87,7 @@ export function processHazardsTick(
           hasActiveHazard: true,
           hazardType,
           warningIssued: true,
-          warningIssuedAtMinute: currentSimMinute,
+          warningIssuedAtMinute: warningOnsetMinute,
         },
       };
 
@@ -93,38 +100,37 @@ export function processHazardsTick(
       };
 
       const warningEvent: DomainEvent = {
-        id: `evt_warn_${catId}_${currentSimMinute}`,
+        id: `evt_warn_${catId}_${warningOnsetMinute}`,
         type: 'HEALTH_WARNING_ISSUED',
         sequence: currentWorld.nextEventSequence++,
-        simTime: currentSimMinute,
+        simTime: warningOnsetMinute,
         actorIds: [catId],
         payload: {
           catId,
           catName: cat.name,
           hazardType,
           warningWindowMinutes: WARNING_WINDOW_MINUTES,
-          expiresAtSimMinute: currentSimMinute + WARNING_WINDOW_MINUTES,
+          expiresAtSimMinute: warningOnsetMinute + WARNING_WINDOW_MINUTES,
         },
       };
 
       allEvents.push(warningEvent);
       currentWorld.events = [...currentWorld.events, warningEvent];
-    } else {
-      // Check if warning window has expired
-      const onset = health.warningIssuedAtMinute ?? currentSimMinute;
-      if (currentSimMinute - onset >= WARNING_WINDOW_MINUTES) {
-        // Preventable death triggers
-        const causeOfDeath = hazardType;
-        const { state: nextState, events: deathEvents } = processCatDeath(
-          currentWorld,
-          catId,
-          causeOfDeath,
-          currentSimMinute
-        );
+    }
 
-        currentWorld = nextState;
-        allEvents.push(...deathEvents);
-      }
+    // Check if warning window has expired (evaluated deterministically)
+    if (currentSimMinute - warningOnsetMinute >= WARNING_WINDOW_MINUTES) {
+      const deathMinute = warningOnsetMinute + WARNING_WINDOW_MINUTES;
+      const causeOfDeath = hazardType;
+      const { state: nextState, events: deathEvents } = processCatDeath(
+        currentWorld,
+        catId,
+        causeOfDeath,
+        deathMinute
+      );
+
+      currentWorld = nextState;
+      allEvents.push(...deathEvents);
     }
   }
 
@@ -159,67 +165,57 @@ export function executeHazardIntervention(
     };
   }
 
-  const health = cat.health || {
-    isIll: false,
-    hasActiveHazard: false,
-    warningIssued: false,
-  };
-
-  const isNeglected = cat.needs && (cat.needs.hunger <= 0 || cat.needs.energy <= 0);
-  if (!health.hasActiveHazard && !health.isIll && !isNeglected) {
+  const health = cat.health;
+  if (!health?.hasActiveHazard && !health?.isIll && cat.needs?.hunger > 0 && cat.needs?.energy > 0) {
     return {
       ok: false,
       state,
-      error: { code: 'NO_ACTIVE_HAZARD', message: `Cat ${cat.name} has no active hazard or illness.` },
+      error: { code: 'NO_ACTIVE_HAZARD', message: `Cat ${cat.name} has no active hazard or life-threatening illness.` },
     };
   }
 
-  // Restore needs if neglected
-  const updatedNeeds = { ...cat.needs };
-  if (updatedNeeds.hunger <= 0) updatedNeeds.hunger = 50;
-  if (updatedNeeds.energy <= 0) updatedNeeds.energy = 50;
-
-  // Clear health hazards
+  // Restore needs and clear hazard
   const updatedCat: CatRecord = {
     ...cat,
-    needs: updatedNeeds,
+    needs: {
+      ...cat.needs,
+      hunger: Math.max(cat.needs.hunger, 50),
+      energy: Math.max(cat.needs.energy, 50),
+      health: 80,
+    },
     health: {
       isIll: false,
       hasActiveHazard: false,
       warningIssued: false,
       warningIssuedAtMinute: undefined,
-      hazardType: undefined,
-      illnessType: undefined,
     },
   };
 
-  const events: DomainEvent[] = [];
-  let nextSeq = state.nextEventSequence;
+  const updatedCats = {
+    ...state.cats,
+    [catId]: updatedCat,
+  };
 
   const recoveryEvent: DomainEvent = {
-    id: `evt_intervene_${catId}_${state.clock.simMinute}`,
+    id: `evt_recover_${catId}_${state.clock.simMinute}`,
     type: 'HAZARD_INTERVENED',
-    sequence: nextSeq++,
+    sequence: state.nextEventSequence,
     simTime: state.clock.simMinute,
     actorIds: [catId],
     payload: {
       catId,
       catName: cat.name,
-      treatmentType: treatmentType || 'care',
+      treatmentType: treatmentType || 'general_care',
       recoveredAtSimMinute: state.clock.simMinute,
     },
   };
-  events.push(recoveryEvent);
 
   const newState: WorldState = {
     ...state,
-    cats: {
-      ...state.cats,
-      [catId]: updatedCat,
-    },
-    nextEventSequence: nextSeq,
-    events: [...state.events, ...events],
+    cats: updatedCats,
+    nextEventSequence: state.nextEventSequence + 1,
+    events: [...state.events, recoveryEvent],
   };
 
-  return { ok: true, state: newState, events };
+  return { ok: true, state: newState, events: [recoveryEvent] };
 }

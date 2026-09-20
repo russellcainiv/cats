@@ -53,8 +53,8 @@ describe('Memorials & Ghost Projections', () => {
 
     // Set clock to midnight (1440 sim minutes)
     world.clock.simMinute = 1440;
-    // Set seed to guarantee ghost spawn
-    world.rng.seed = 1;
+    // Set seed to guarantee ghost spawn with canonical SeededRng
+    world.rng.seed = 2;
 
     const { state: nightState } = processGhostTick(world, 10);
 

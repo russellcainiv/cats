@@ -11,7 +11,8 @@ import {
   LifecycleCommand,
 } from './types';
 
-import { inheritAppearance, inheritTraits, nextRng } from './genetics';
+import { inheritAppearance, inheritTraits } from './genetics';
+import { nextRng } from './rng';
 
 export const GESTATION_MINUTES = 3 * 24 * 60; // 3 sim days = 4320 sim minutes
 export const MAX_HOUSEHOLD_CAPACITY = 8;
@@ -25,7 +26,7 @@ export function getOccupiedHouseholdSlots(state: WorldState): number {
 
   for (const preg of Object.values(state.lifecycle.pregnancies)) {
     if (!preg.resolved) {
-      reservedSlots += preg.litterSize;
+      reservedSlots += preg.reservedSlots ?? preg.litterSize ?? 1;
     }
   }
 
@@ -35,6 +36,7 @@ export function getOccupiedHouseholdSlots(state: WorldState): number {
 /**
  * Handles automatic pregnancy state updates during time advance.
  * If a pregnancy carrier (dam) is deceased or moved out, cancels pregnancy and releases reserved litter slots.
+ * Keeps only active pregnancies in lifecycle.pregnancies.
  */
 export function processGestationTick(
   state: WorldState,
@@ -49,17 +51,22 @@ export function processGestationTick(
 
   for (const pregId of Object.keys(newPregnancies)) {
     const preg = newPregnancies[pregId];
-    if (preg.resolved) continue;
+    if (preg.resolved) {
+      // Historical/resolved pregnancies must not remain in active lifecycle.pregnancies
+      delete newPregnancies[pregId];
+      modified = true;
+      continue;
+    }
 
-    const dam = updatedState.cats[preg.damId];
+    const damId = preg.parentIds?.[0] ?? preg.damId ?? (preg as any).motherId;
+    const litterSize = preg.reservedSlots ?? preg.litterSize ?? 1;
+
+    const dam = updatedState.cats[damId];
 
     // Check if dam died or moved out
     if (!dam || dam.lifeStatus !== 'living') {
-      // Pregnancy cancelled due to carrier death/absence
-      newPregnancies[pregId] = {
-        ...preg,
-        resolved: true,
-      };
+      // Remove pregnancy from active map to release reservation
+      delete newPregnancies[pregId];
       modified = true;
 
       const event: DomainEvent = {
@@ -67,12 +74,12 @@ export function processGestationTick(
         type: 'PREGNANCY_CANCELLED',
         sequence: updatedState.nextEventSequence++,
         simTime: currentSimMinute,
-        actorIds: [preg.damId],
+        actorIds: [damId].filter(Boolean),
         payload: {
           pregnancyId: pregId,
-          damId: preg.damId,
+          damId,
           reason: !dam ? 'dam_not_found' : `dam_status_${dam.lifeStatus}`,
-          releasedSlots: preg.litterSize,
+          releasedSlots: litterSize,
         },
       };
       events.push(event);
@@ -120,21 +127,21 @@ export function executeBirth(
     };
   }
 
-  const dam = state.cats[preg.damId];
+  const damId = preg.parentIds?.[0] ?? preg.damId ?? (preg as any).motherId;
+  const sireId = preg.parentIds?.[1] ?? preg.sireId ?? (preg as any).fatherId;
+  const litterCount = preg.reservedSlots ?? preg.litterSize ?? 1;
+
+  const dam = state.cats[damId];
   if (!dam || dam.lifeStatus !== 'living') {
     return {
       ok: false,
       state,
-      error: { code: 'DAM_UNAVAILABLE', message: `Dam ${preg.damId} is not alive.` },
+      error: { code: 'DAM_UNAVAILABLE', message: `Dam ${damId} is not alive.` },
     };
   }
 
-  // Check capacity invariant: living count + (reserved - litterSize) + kittens <= 8
-  // Since reserved slots were already reserved during pregnancy creation, swapping reserved slots for kittens is 1-to-1 or less.
+  // Check capacity invariant: living count + kittens <= 8
   const currentLiving = state.livingCatIds.length;
-
-  // Actual kittens born is preg.litterSize (1-3)
-  const litterCount = preg.litterSize;
   if (currentLiving + litterCount > MAX_HOUSEHOLD_CAPACITY) {
     return {
       ok: false,
@@ -143,7 +150,7 @@ export function executeBirth(
     };
   }
 
-  const sire = preg.sireId ? state.cats[preg.sireId] ?? null : null;
+  const sire = sireId ? state.cats[sireId] ?? null : null;
   const damGen = dam.family?.generation ?? 1;
   const sireGen = sire?.family?.generation ?? 1;
   const kittenGen = Math.max(damGen, sireGen) + 1;
@@ -168,6 +175,9 @@ export function executeBirth(
       householdId: state.householdId,
       name: defaultName,
       appearance,
+      baseAppearance: appearance,
+      careerOutfit: null,
+      isAtWork: false,
       traits,
       lifeStage: 'kitten',
       ageDays: 0,
@@ -190,11 +200,13 @@ export function executeBirth(
       position: { ...dam.position },
       currentAction: null,
       family: {
-        sireId: preg.sireId,
-        damId: preg.damId,
+        sireId: sireId ?? null,
+        damId,
         childIds: [],
         generation: kittenGen,
       },
+      motherId: damId,
+      fatherId: sireId ?? undefined,
       health: {
         isIll: false,
         hasActiveHazard: false,
@@ -208,9 +220,10 @@ export function executeBirth(
     bornKittenIds.push(kittenId);
   }
 
-  // Update dam and sire family childIds
+  // Update dam and sire family childIds, clear isPregnant on dam
   const updatedDam: CatRecord = {
     ...dam,
+    isPregnant: false,
     family: {
       ...dam.family,
       childIds: Array.from(new Set([...(dam.family?.childIds || []), ...bornKittenIds])),
@@ -229,14 +242,9 @@ export function executeBirth(
     newCats[sire.id] = updatedSire;
   }
 
-  // Mark pregnancy as resolved
-  const updatedPregnancies = {
-    ...state.lifecycle.pregnancies,
-    [pregnancyId]: {
-      ...preg,
-      resolved: true,
-    },
-  };
+  // Remove pregnancy from active pregnancies so reservation is released exactly once
+  const updatedPregnancies = { ...state.lifecycle.pregnancies };
+  delete updatedPregnancies[pregnancyId];
 
   // Domain event
   const birthEvent: DomainEvent = {
@@ -244,11 +252,11 @@ export function executeBirth(
     type: 'KITTENS_BORN',
     sequence: nextSeq++,
     simTime: state.clock.simMinute,
-    actorIds: [preg.damId, ...bornKittenIds],
+    actorIds: [damId, ...bornKittenIds],
     payload: {
       pregnancyId,
-      damId: preg.damId,
-      sireId: preg.sireId,
+      damId,
+      sireId: sireId ?? null,
       kittenIds: bornKittenIds,
       litterSize: litterCount,
       generation: kittenGen,

@@ -17,6 +17,7 @@ import { processHazardsTick, executeHazardIntervention } from './hazards';
 import { processGhostTick, executePlaceMemorial, executeDismissGhost } from './ghosts';
 
 export * from './types';
+export * from './rng';
 export * from './genetics';
 export * from './birth';
 export * from './aging';
@@ -39,6 +40,7 @@ export function initLifecycleState(): LifecycleSubsystemState {
  * Type discriminator check for Lifecycle commands.
  */
 export function isLifecycleCommand(command: GameCommand): command is LifecycleCommand {
+  if (!command || typeof command !== 'object') return false;
   return (
     command.type === 'TRIGGER_BIRTH' ||
     command.type === 'INTERVENE_HAZARD' ||
@@ -48,7 +50,7 @@ export function isLifecycleCommand(command: GameCommand): command is LifecycleCo
 }
 
 /**
- * Pure atomic full-world command reducer for Lifecycle subsystem.
+ * Pure atomic full-world reducer for Lifecycle subsystem commands.
  */
 export function reduceLifecycle(
   state: WorldState,
@@ -58,12 +60,16 @@ export function reduceLifecycle(
   switch (command.type) {
     case 'TRIGGER_BIRTH':
       return executeBirth(state, command, context);
+
     case 'INTERVENE_HAZARD':
       return executeHazardIntervention(state, command, context);
+
     case 'PLACE_MEMORIAL':
       return executePlaceMemorial(state, command, context);
+
     case 'DISMISS_GHOST':
       return executeDismissGhost(state, command, context);
+
     default:
       return {
         ok: false,
@@ -75,6 +81,7 @@ export function reduceLifecycle(
 
 /**
  * Pure atomic full-world simulation tick / advance function for Lifecycle subsystem.
+ * Clock ruling: core engine alone advances clock; advanceLifecycle processes ticks at the current clock boundary without incrementing clock again.
  */
 export function advanceLifecycle(state: WorldState, elapsedSimMinutes: number): WorldState {
   if (state.clock.isPaused || elapsedSimMinutes <= 0) {
@@ -83,28 +90,19 @@ export function advanceLifecycle(state: WorldState, elapsedSimMinutes: number): 
 
   let currentState = { ...state };
 
-  // 1. Advance simulation clock minute
-  currentState = {
-    ...currentState,
-    clock: {
-      ...currentState.clock,
-      simMinute: currentState.clock.simMinute + elapsedSimMinutes,
-    },
-  };
-
-  // 2. Process gestation ticks (carrier death checks & pregnancy cancellations)
+  // 1. Process gestation ticks (carrier death checks & active pregnancy maintenance)
   const gestationResult = processGestationTick(currentState, elapsedSimMinutes);
   currentState = gestationResult.state;
 
-  // 3. Process aging ticks (stage transitions and natural old-age death at 150 days)
+  // 2. Process aging ticks (stage transitions and natural old-age death at 150 days)
   const agingResult = processAgingTick(currentState, elapsedSimMinutes);
   currentState = agingResult.state;
 
-  // 4. Process hazard / illness / neglect warnings and preventable death timers
+  // 3. Process hazard / illness / neglect warnings and preventable death timers
   const hazardResult = processHazardsTick(currentState, elapsedSimMinutes);
   currentState = hazardResult.state;
 
-  // 5. Process ghost projection expirations and night-time seeded visits
+  // 4. Process ghost projection expirations and night-time seeded visits
   const ghostResult = processGhostTick(currentState, elapsedSimMinutes);
   currentState = ghostResult.state;
 

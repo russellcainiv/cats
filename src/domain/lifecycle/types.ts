@@ -82,11 +82,19 @@ export interface HealthStatus {
   warningIssuedAtMinute?: number;
 }
 
+export interface CareerOutfit {
+  outfitId: string;
+  careerId: string;
+  rank: number;
+}
+
 export interface CatRecord {
   id: CatId;
   householdId: HouseholdId;
   name: string;
   appearance: CatAppearance;
+  baseAppearance?: CatAppearance;
+  careerOutfit?: CareerOutfit | null;
   traits: PersonalityTrait[];
   lifeStage: LifeStage;
   ageDays: number;
@@ -101,16 +109,30 @@ export interface CatRecord {
   causeOfDeath?: string;
   deceasedAtSimMinute?: number;
   jobId?: string | null;
+  isAtWork?: boolean;
+  isPregnant?: boolean;
+  motherId?: CatId;
+  fatherId?: CatId;
 }
 
 export interface PregnancyRecord {
   id: PregnancyId;
-  damId: CatId;
-  sireId: CatId;
-  conceptionSimMinute: number;
-  dueSimMinute: number;
-  litterSize: number; // reserved slots (1..3)
-  resolved: boolean;
+  parentIds: [CatId, CatId]; // [gestatingCatId, otherParentId]
+  startedAtSimMinute: number;
+  dueAtSimMinute: number;
+  reservedSlots: number;
+  conceptionEventId: string;
+  // Compatibility fields
+  damId?: CatId;
+  sireId?: CatId;
+  motherId?: CatId;
+  fatherId?: CatId;
+  conceptionSimMinute?: number;
+  conceivedAtSimMinute?: number;
+  dueSimMinute?: number;
+  litterSize?: number; // reserved slots (1..3)
+  resolved?: boolean;
+  rngSeedAtConception?: number;
 }
 
 export interface MemorialRecord {

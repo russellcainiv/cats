@@ -11,7 +11,7 @@ import {
   LifecycleCommand,
 } from './types';
 
-import { nextRng } from './genetics';
+import { nextRng } from './rng';
 
 export const GHOST_VISIT_DURATION_MINUTES = 180; // 3 sim hours ghost visit duration
 export const GHOST_CHANCE = 0.3; // 30% chance per night per memorial
@@ -164,7 +164,8 @@ export function processGhostTick(
   if (currentNight > lastCheckNight && currentSimMinute % 1440 < elapsedSimMinutes) {
     // Night transition! Check each memorial for seeded ghost visit
     let currentRng = currentWorld.rng;
-    const memorials = Object.values(currentWorld.lifecycle.memorials);
+    const updatedMemorials = { ...currentWorld.lifecycle.memorials };
+    const memorials = Object.values(updatedMemorials);
     const newGhosts = [...currentWorld.lifecycle.ghosts];
 
     for (const mem of memorials) {
@@ -172,7 +173,7 @@ export function processGhostTick(
       if (newGhosts.some(g => g.memorialId === mem.id)) continue;
 
       let val: number;
-      [val, currentRng] = nextRng(currentRng);
+      [val, currentRng] = nextRng(currentRng, 'ghost_spawn', currentSimMinute);
 
       if (val < GHOST_CHANCE) {
         // Spawn ghost visit projection
@@ -192,11 +193,17 @@ export function processGhostTick(
 
         newGhosts.push(ghostProj);
 
-        // Record ghost visit on memorial
-        mem.ghostVisits.push({
-          simMinute: currentSimMinute,
-          durationMinutes: GHOST_VISIT_DURATION_MINUTES,
-        });
+        // Record ghost visit on memorial immutably without mutating mem in-place
+        updatedMemorials[mem.id] = {
+          ...mem,
+          ghostVisits: [
+            ...(mem.ghostVisits || []),
+            {
+              simMinute: currentSimMinute,
+              durationMinutes: GHOST_VISIT_DURATION_MINUTES,
+            },
+          ],
+        };
 
         const ghostEvent: DomainEvent = {
           id: `evt_ghost_visit_${mem.id}_${currentSimMinute}`,
@@ -222,6 +229,7 @@ export function processGhostTick(
       rng: currentRng,
       lifecycle: {
         ...currentWorld.lifecycle,
+        memorials: updatedMemorials,
         ghosts: newGhosts,
         lastGhostCheckNight: currentNight,
       },

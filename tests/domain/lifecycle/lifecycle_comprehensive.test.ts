@@ -174,12 +174,11 @@ describe('Comprehensive Lifecycle Domain Test Suite', () => {
 
     expect(world.lifecycle.memorials['mem_cat1'].tombstonePosition).toEqual({ lotId: 'lot_home', x: 5, y: 5 });
 
-    // Set simMinute to 1435 and lastGhostCheckNight to -1
-    world.clock.simMinute = 1435;
+    // Advance clock to end-of-step 1445 (crossing midnight 1440) and set seed to 2
+    world.clock.simMinute = 1445;
     world.lifecycle.lastGhostCheckNight = -1;
-    world.rng.seed = 1;
+    world.rng.seed = 2;
 
-    // Advance 10 simMinutes -> crosses 1440 (midnight of day 1)
     world = advanceLifecycle(world, 10);
     expect(world.lifecycle.ghosts.length).toBe(1);
 
