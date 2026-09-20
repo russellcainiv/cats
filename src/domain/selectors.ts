@@ -12,6 +12,7 @@ import {
   CatPosition,
   CatRecord,
   CatSkills,
+  CareerOutfit,
   DoorItem,
   GhostProjection,
   GoalRecord,
@@ -35,6 +36,8 @@ export interface CatView {
   id: CatId;
   name: string;
   appearance: CatAppearance;
+  careerOutfit?: CareerOutfit | null;
+  isAtWork?: boolean;
   traits: PersonalityTrait[];
   lifeStage: LifeStage;
   ageDays: number;
@@ -115,6 +118,8 @@ function projectCatView(cat: CatRecord): CatView {
     id: cat.id,
     name: cat.name,
     appearance: { ...cat.appearance },
+    careerOutfit: cat.careerOutfit ?? null,
+    isAtWork: cat.isAtWork ?? false,
     traits: [...cat.traits],
     lifeStage: cat.lifeStage,
     ageDays,
@@ -170,9 +175,6 @@ export function selectView(state: WorldState): GameView {
   for (const [id, cat] of Object.entries(state.cats)) {
     const view = projectCatView(cat);
     catsMap[id] = view;
-    // Also index by normalized lower-case name for test access (e.g. view.cats.mochi)
-    const normalizedName = cat.name.toLowerCase().replace(/\s+/g, '_');
-    catsMap[normalizedName] = view;
 
     // Collect urgent warnings for living cats
     if (cat.lifeStatus === 'living') {

@@ -49,7 +49,8 @@ export function createCatRecord(options: CreateCatOptions): CatRecord {
     throw new Error(error || 'Invalid cat name');
   }
 
-  const id: CatId = options.id || `cat_${Date.now()}_${Math.floor(Math.random() * 10000)}`;
+  const safeName = trimmedName.toLowerCase().replace(/[^a-z0-9_]/g, '') || 'cat';
+  const id: CatId = options.id || `cat_${safeName}_${options.createdAtSimMinute ?? 0}`;
 
   // Default age based on life stage if not provided
   let ageMinutes = options.ageMinutes ?? 0;
@@ -104,6 +105,9 @@ export function createCatRecord(options: CreateCatOptions): CatRecord {
     householdId: options.householdId,
     name: trimmedName,
     appearance: { ...options.appearance },
+    baseAppearance: { ...options.appearance },
+    careerOutfit: null,
+    isAtWork: false,
     traits: [...options.traits],
     lifeStage,
     ageMinutes,

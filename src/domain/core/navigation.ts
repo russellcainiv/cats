@@ -32,7 +32,44 @@ export function isCellBlocked(lot: WorldLot, cell: GridCell): boolean {
     return true;
   }
   const key = cellKey(cell.x, cell.y);
+  if (lot.doors && lot.doors.some((d) => d.x === cell.x && d.y === cell.y)) {
+    return false;
+  }
   return lot.blockedCells.includes(key);
+}
+
+export function recomputeBlockedCells(lot: {
+  walls: readonly { x1: number; y1: number; x2: number; y2: number }[];
+  objects: readonly { x: number; y: number; width?: number; height?: number }[];
+  doors?: readonly { x: number; y: number }[];
+}): string[] {
+  const set = new Set<string>();
+  for (const wall of lot.walls) {
+    const minX = Math.min(wall.x1, wall.x2);
+    const maxX = Math.max(wall.x1, wall.x2);
+    const minY = Math.min(wall.y1, wall.y2);
+    const maxY = Math.max(wall.y1, wall.y2);
+    for (let x = minX; x <= maxX; x++) {
+      for (let y = minY; y <= maxY; y++) {
+        set.add(cellKey(x, y));
+      }
+    }
+  }
+  for (const obj of lot.objects) {
+    const w = obj.width ?? 1;
+    const h = obj.height ?? 1;
+    for (let dx = 0; dx < w; dx++) {
+      for (let dy = 0; dy < h; dy++) {
+        set.add(cellKey(obj.x + dx, obj.y + dy));
+      }
+    }
+  }
+  if (lot.doors) {
+    for (const door of lot.doors) {
+      set.delete(cellKey(door.x, door.y));
+    }
+  }
+  return Array.from(set);
 }
 
 export function getFacingDirection(from: GridCell, to: GridCell): 'north' | 'south' | 'east' | 'west' {

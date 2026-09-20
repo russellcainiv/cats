@@ -16,11 +16,10 @@ describe('GameView Projection Selectors', () => {
     expect(view.simulation.statusText).toBe('Paused');
     expect(view.simulation.day).toBe(1);
 
-    // Mochi accessible by both ID and normalized name
+    // Mochi accessible strictly by CatId
     expect(view.cats['cat_mochi']).toBeDefined();
-    expect(view.cats['mochi']).toBeDefined();
-    expect(view.cats['mochi'].name).toBe('Mochi');
-    expect(view.cats['mochi'].position).toEqual({ lotId: 'home', x: 4, y: 4, facing: 'south' });
+    expect(view.cats['cat_mochi'].name).toBe('Mochi');
+    expect(view.cats['cat_mochi'].position).toEqual({ lotId: 'home', x: 4, y: 4, facing: 'south' });
 
     // Home lot details
     expect(view.home.id).toBe('home');

@@ -5,11 +5,12 @@
 import { createCatRecord, validateCatName } from './core/cat';
 import { createDomainEvent } from './core/events';
 import { appendReceipt, createReceipt, findReceipt } from './core/idempotency';
-import { findPath } from './core/navigation';
+import { cellKey, findPath } from './core/navigation';
 import { handleSubsystemCommand } from './core/subsystems';
 import { assertInvariants } from './invariants';
 import { SeededRng } from './rng';
 import {
+  ActionQueueItem,
   calculateAvailableCapacity,
   CatAppearance,
   CatId,
@@ -99,6 +100,30 @@ export function dispatch(
   // 1. Idempotency Check: Return previously processed result without re-executing
   const existingReceipt = findReceipt(state.commandReceipts, context.commandId);
   if (existingReceipt) {
+    const incomingReceipt = createReceipt(
+      context.commandId,
+      0,
+      context.actorId,
+      command.type,
+      true,
+      command.payload
+    );
+
+    if (
+      existingReceipt.type !== command.type ||
+      existingReceipt.receiptChecksum !== incomingReceipt.receiptChecksum ||
+      existingReceipt.actorId !== context.actorId
+    ) {
+      return {
+        ok: false,
+        state,
+        error: {
+          code: 'COMMAND_ID_PAYLOAD_MISMATCH',
+          message: 'Command ID reused with different payload, type, or actor',
+        },
+      };
+    }
+
     if (existingReceipt.success) {
       return {
         ok: true,
@@ -144,7 +169,12 @@ export function dispatch(
           };
         }
 
+        const catSeq = nextState.nextEventSequence;
+        const safeName = trimmedName.toLowerCase().replace(/[^a-z0-9_]/g, '') || 'cat';
+        const newCatId = `cat_${safeName}_${state.clock.simMinute}_${catSeq}`;
+
         const newCat = createCatRecord({
+          id: newCatId,
           householdId: state.householdId,
           name: trimmedName,
           appearance: command.payload.appearance,
@@ -154,9 +184,14 @@ export function dispatch(
 
         nextState = {
           ...nextState,
+          clock: {
+            ...nextState.clock,
+            isPaused: state.livingCatIds.length === 0 ? false : nextState.clock.isPaused,
+          },
           livingCatIds: [...nextState.livingCatIds, newCat.id],
           cats: { ...nextState.cats, [newCat.id]: newCat },
           selectedCatId: nextState.selectedCatId ?? newCat.id,
+          nextEventSequence: catSeq + 1,
         };
 
         const evt = createDomainEvent(
@@ -164,7 +199,7 @@ export function dispatch(
           [newCat.id],
           { catId: newCat.id, name: newCat.name },
           state.clock.simMinute,
-          nextState.nextEventSequence++
+          catSeq
         );
         events.push(evt);
         break;
@@ -228,11 +263,12 @@ export function dispatch(
           };
         }
 
+        const moveSeq = nextState.nextEventSequence;
         const updatedCat: CatRecord = {
           ...cat,
           lastRoute: pathResult.route,
           currentAction: {
-            id: `act_move_${Date.now()}`,
+            id: `act_move_${catId}_${state.clock.simMinute}_${moveSeq}`,
             type: 'move',
             targetPosition: target,
             durationMinutes: Math.max(1, pathResult.route.length - 1),
@@ -246,6 +282,7 @@ export function dispatch(
         nextState = {
           ...nextState,
           cats: { ...nextState.cats, [catId]: updatedCat },
+          nextEventSequence: moveSeq + 1,
         };
 
         const evt = createDomainEvent(
@@ -253,7 +290,7 @@ export function dispatch(
           [catId],
           { target, routeLength: pathResult.route.length },
           state.clock.simMinute,
-          nextState.nextEventSequence++
+          moveSeq
         );
         events.push(evt);
         break;
@@ -304,8 +341,9 @@ export function dispatch(
           };
         }
 
-        const actionItem = {
-          id: `act_${actionType}_${Date.now()}`,
+        const careSeq = nextState.nextEventSequence;
+        const careActionItem = {
+          id: `act_${actionType}_${catId}_${state.clock.simMinute}_${careSeq}`,
           type: actionType,
           targetId: targetObjectId,
           durationMinutes: 3,
@@ -314,14 +352,55 @@ export function dispatch(
           autonomous: false,
         };
 
+        const lot = state.building.lots[cat.position.lotId];
+        let initialAction: ActionQueueItem = careActionItem;
+        let queuedActions = [...cat.actionQueue];
+        let routeToSpot: GridCell[] = [];
+
+        if (targetObjectId && lot) {
+          const obj = lot.objects.find((o) => o.id === targetObjectId);
+          if (obj) {
+            const spot =
+              obj.interactSpots && obj.interactSpots.length > 0
+                ? obj.interactSpots.find((s) => !lot.blockedCells.includes(cellKey(s.x, s.y))) || obj.interactSpots[0]
+                : { x: obj.x, y: obj.y };
+
+            if (cat.position.x !== spot.x || cat.position.y !== spot.y) {
+              const pathRes = findPath(lot, { x: cat.position.x, y: cat.position.y }, spot);
+              if (!pathRes.reachable) {
+                return {
+                  ok: false,
+                  state,
+                  error: { code: 'UNREACHABLE_PATH', message: pathRes.error || 'Destination cell is unreachable or blocked' },
+                };
+              }
+              routeToSpot = pathRes.route;
+              initialAction = {
+                id: `act_move_${catId}_${state.clock.simMinute}_${careSeq}`,
+                type: 'move',
+                targetPosition: spot,
+                durationMinutes: Math.max(1, routeToSpot.length - 1),
+                elapsedMinutes: 0,
+                isInterruptible: true,
+                autonomous: false,
+                payload: { route: routeToSpot },
+              };
+              queuedActions = [careActionItem, ...queuedActions];
+            }
+          }
+        }
+
         const updatedCat: CatRecord = {
           ...cat,
-          currentAction: actionItem,
+          currentAction: initialAction,
+          actionQueue: queuedActions,
+          lastRoute: routeToSpot,
         };
 
         nextState = {
           ...nextState,
           cats: { ...nextState.cats, [catId]: updatedCat },
+          nextEventSequence: careSeq + 1,
         };
 
         const evt = createDomainEvent(
@@ -329,7 +408,7 @@ export function dispatch(
           [catId],
           { actionType, targetObjectId },
           state.clock.simMinute,
-          nextState.nextEventSequence++
+          careSeq
         );
         events.push(evt);
         break;
@@ -391,9 +470,23 @@ export function dispatch(
           };
         }
 
+        const { valid, error, trimmedName } = validateCatName(command.payload.name);
+        if (!valid) {
+          return {
+            ok: false,
+            state,
+            error: { code: 'INVALID_NAME', message: error || 'Invalid cat name' },
+          };
+        }
+
+        const adoptSeq = nextState.nextEventSequence;
+        const safeName = trimmedName.toLowerCase().replace(/[^a-z0-9_]/g, '') || 'adopted';
+        const adoptedCatId = `cat_${safeName}_${state.clock.simMinute}_${adoptSeq}`;
+
         const adoptedCat = createCatRecord({
+          id: adoptedCatId,
           householdId: state.householdId,
-          name: command.payload.name,
+          name: trimmedName,
           appearance: command.payload.appearance,
           traits: command.payload.traits,
           createdAtSimMinute: state.clock.simMinute,
@@ -401,9 +494,14 @@ export function dispatch(
 
         nextState = {
           ...nextState,
+          clock: {
+            ...nextState.clock,
+            isPaused: state.livingCatIds.length === 0 ? false : nextState.clock.isPaused,
+          },
           livingCatIds: [...nextState.livingCatIds, adoptedCat.id],
           cats: { ...nextState.cats, [adoptedCat.id]: adoptedCat },
           selectedCatId: nextState.selectedCatId ?? adoptedCat.id,
+          nextEventSequence: adoptSeq + 1,
         };
 
         const evt = createDomainEvent(
@@ -411,7 +509,7 @@ export function dispatch(
           [adoptedCat.id],
           { catId: adoptedCat.id, name: adoptedCat.name },
           state.clock.simMinute,
-          nextState.nextEventSequence++
+          adoptSeq
         );
         events.push(evt);
         break;

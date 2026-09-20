@@ -110,8 +110,8 @@ export function advanceNeeds(
     healthDelta -= 0.05 * healthMultiplier * elapsedMinutes;
   } else if (hunger < 25 || hygiene < 25) {
     healthDelta -= NEED_DECAY_RATES.health * healthMultiplier * elapsedMinutes;
-  } else if (hunger >= 60 && hygiene >= 60 && energy >= 50 && comfort >= 50) {
-    // Healthy recovery
+  } else if (currentNeeds.health > 0 && hunger >= 60 && hygiene >= 60 && energy >= 50 && comfort >= 50) {
+    // Healthy recovery (only if cat is still alive with health > 0)
     healthDelta += 0.02 * elapsedMinutes;
   }
 

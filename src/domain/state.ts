@@ -122,11 +122,20 @@ export interface RelationshipRecord {
   lastInteractionMinute: number;
 }
 
+export interface CareerOutfit {
+  outfitId: string;
+  careerId: string;
+  rank: number;
+}
+
 export interface CatRecord {
   id: CatId;
   householdId: HouseholdId;
   name: string;
   appearance: CatAppearance;
+  baseAppearance: CatAppearance;
+  careerOutfit?: CareerOutfit | null;
+  isAtWork?: boolean;
   traits: PersonalityTrait[];
   lifeStage: LifeStage;
   ageMinutes: number;
@@ -239,6 +248,7 @@ export interface CareerRecord {
   shiftEndHour: number;
   workDays: number[];
   performance: number;
+  isAtWork?: boolean;
 }
 
 export interface CafeBusiness {
@@ -262,6 +272,7 @@ export interface SimClock {
   simMinute: number;
   isPaused: boolean;
   speed: 1;
+  fractionalMinutes?: number;
 }
 
 export interface CommandContext {

@@ -30,7 +30,7 @@ export const DEFAULT_ACTION_DURATIONS: Record<string, number> = {
 };
 
 export function createAction(options: CreateActionOptions): ActionQueueItem {
-  const id = options.id || `act_${Date.now()}_${Math.floor(Math.random() * 10000)}`;
+  const id = options.id || `act_${options.type}_${options.targetId || 'self'}_${options.durationMinutes ?? 0}`;
   const durationMinutes = options.durationMinutes ?? (DEFAULT_ACTION_DURATIONS[options.type] || 5);
 
   return {

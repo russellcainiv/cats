@@ -12,7 +12,7 @@ export function createDomainEvent(
   sequence: number,
   rngLabel?: string
 ): DomainEvent {
-  const id: EventId = `evt_${sequence}_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+  const id: EventId = `evt_${sequence}`;
   return {
     id,
     type,

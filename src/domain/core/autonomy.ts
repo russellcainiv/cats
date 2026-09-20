@@ -6,7 +6,7 @@
  */
 
 import { SeededRng } from '../rng';
-import { ActionQueueItem, CatRecord, WorldLot, WorldState } from '../state';
+import { ActionQueueItem, CatRecord, LotObject, WorldLot, WorldState } from '../state';
 import { createAction } from './actions';
 import { cellKey, findPath } from './navigation';
 
@@ -14,6 +14,15 @@ export interface AutonomousDecision {
   shouldAct: boolean;
   action?: ActionQueueItem;
   reason?: string;
+}
+
+function getObjectInteractSpot(obj: LotObject | undefined, lot: WorldLot): { x: number; y: number } | undefined {
+  if (!obj) return undefined;
+  if (obj.interactSpots && obj.interactSpots.length > 0) {
+    const unblocked = obj.interactSpots.find((s) => !lot.blockedCells.includes(cellKey(s.x, s.y)));
+    return unblocked ? { x: unblocked.x, y: unblocked.y } : { ...obj.interactSpots[0] };
+  }
+  return { x: obj.x, y: obj.y };
 }
 
 export function evaluateCatAutonomy(
@@ -49,7 +58,7 @@ export function evaluateCatAutonomy(
       type: 'eat',
       score,
       targetId: bowl?.id,
-      targetPos: bowl ? { x: bowl.x, y: bowl.y } : undefined,
+      targetPos: getObjectInteractSpot(bowl, lot),
     });
   }
 
@@ -63,7 +72,7 @@ export function evaluateCatAutonomy(
       type: 'sleep',
       score,
       targetId: bed?.id,
-      targetPos: bed ? { x: bed.x, y: bed.y } : undefined,
+      targetPos: getObjectInteractSpot(bed, lot),
     });
   }
 
@@ -75,7 +84,7 @@ export function evaluateCatAutonomy(
       type: 'litter',
       score,
       targetId: litter?.id,
-      targetPos: litter ? { x: litter.x, y: litter.y } : undefined,
+      targetPos: getObjectInteractSpot(litter, lot),
     });
     // Self-grooming option
     options.push({
@@ -93,7 +102,7 @@ export function evaluateCatAutonomy(
       type: 'scratch',
       score,
       targetId: scratcher?.id,
-      targetPos: scratcher ? { x: scratcher.x, y: scratcher.y } : undefined,
+      targetPos: getObjectInteractSpot(scratcher, lot),
     });
     options.push({
       type: 'play',
@@ -119,7 +128,8 @@ export function evaluateCatAutonomy(
         const rel1 = cat.relationships[otherCatId];
         const rel2 = other.relationships[cat.id];
         const mutualLove = rel1?.isLove && rel2?.isLove && rel1.romance >= 70 && rel2.romance >= 70;
-        if (mutualLove) {
+        const cooldownPassed = !rel1?.lastInteractionMinute || (state.clock.simMinute - rel1.lastInteractionMinute >= 60);
+        if (mutualLove && cooldownPassed) {
           options.push({
             type: 'moo_moo',
             score: 75,
