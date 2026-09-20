@@ -9,6 +9,7 @@ import {
   CatRecord,
   DomainEvent,
   LifecycleCommand,
+  FamilyTreeRef,
 } from './types';
 
 import { inheritAppearance, inheritTraits } from './genetics';
@@ -127,6 +128,18 @@ export function executeBirth(
     };
   }
 
+  const dueAt = preg.dueAtSimMinute ?? (preg as any).dueSimMinute ?? ((preg as any).conceivedAtSimMinute ? (preg as any).conceivedAtSimMinute + GESTATION_MINUTES : 0);
+  if (state.clock.simMinute < dueAt) {
+    return {
+      ok: false,
+      state,
+      error: {
+        code: 'PREMATURE_GESTATION',
+        message: `Pregnancy ${pregnancyId} has not completed gestation (due at minute ${dueAt}, current minute is ${state.clock.simMinute}).`,
+      },
+    };
+  }
+
   const damId = preg.parentIds?.[0] ?? preg.damId ?? (preg as any).motherId;
   const sireId = preg.parentIds?.[1] ?? preg.sireId ?? (preg as any).fatherId;
   const litterCount = preg.reservedSlots ?? preg.litterSize ?? 1;
@@ -187,8 +200,10 @@ export function executeBirth(
         hunger: 100,
         energy: 100,
         hygiene: 100,
+        comfort: 100,
         social: 100,
         fun: 100,
+        health: 100,
         bladder: 100,
       },
       skills: {
@@ -220,24 +235,32 @@ export function executeBirth(
     bornKittenIds.push(kittenId);
   }
 
-  // Update dam and sire family childIds, clear isPregnant on dam
+  // Update dam and sire family childIds, clear isPregnant and pregnancyId on dam
+  const damFamily: FamilyTreeRef = {
+    sireId: dam.family?.sireId ?? null,
+    damId: dam.family?.damId ?? null,
+    generation: dam.family?.generation ?? 1,
+    childIds: Array.from(new Set([...(dam.family?.childIds || []), ...bornKittenIds])),
+  };
   const updatedDam: CatRecord = {
     ...dam,
     isPregnant: false,
-    family: {
-      ...dam.family,
-      childIds: Array.from(new Set([...(dam.family?.childIds || []), ...bornKittenIds])),
-    },
+    pregnancyId: undefined,
+    family: damFamily,
   };
   newCats[dam.id] = updatedDam;
 
   if (sire) {
+    const sireFamily: FamilyTreeRef = {
+      sireId: sire.family?.sireId ?? null,
+      damId: sire.family?.damId ?? null,
+      generation: sire.family?.generation ?? 1,
+      childIds: Array.from(new Set([...(sire.family?.childIds || []), ...bornKittenIds])),
+    };
     const updatedSire: CatRecord = {
       ...sire,
-      family: {
-        ...sire.family,
-        childIds: Array.from(new Set([...(sire.family?.childIds || []), ...bornKittenIds])),
-      },
+      pregnancyId: undefined,
+      family: sireFamily,
     };
     newCats[sire.id] = updatedSire;
   }

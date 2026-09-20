@@ -24,9 +24,17 @@ export interface CatPosition {
 }
 
 export interface CatAppearance {
-  coatColor: string;
-  coatPattern: string;
-  eyeColor: string;
+  breed?: string;
+  primaryColor?: string;
+  secondaryColor?: string;
+  pattern?: 'solid' | 'tabby' | 'bicolor' | 'calico' | 'tortoiseshell' | 'pointed';
+  eyeColor?: 'green' | 'amber' | 'blue' | 'copper' | 'heterochromia' | string;
+  bodyType?: 'petite' | 'average' | 'stocky' | 'fluffy';
+  collarColor?: string;
+  accessoryId?: string;
+  // Backward compatibility fields
+  coatColor?: string;
+  coatPattern?: string;
   expression?: string;
 }
 
@@ -38,22 +46,30 @@ export type PersonalityTrait =
   | 'affectionate'
   | 'skittish'
   | 'vocal'
-  | 'adventurous';
+  | 'adventurous'
+  | 'aloof'
+  | 'mischievous'
+  | 'zen';
 
 export interface CatNeeds {
   hunger: number; // 0..100
   energy: number; // 0..100
   hygiene: number; // 0..100
+  comfort?: number; // 0..100
   social: number; // 0..100
   fun: number; // 0..100
-  bladder: number; // 0..100
+  health: number; // 0..100
+  bladder?: number; // 0..100
 }
 
 export interface CatSkills {
   hunting: number;
-  climbing: number;
-  socializing: number;
+  climbing?: number;
+  socializing?: number;
   charisma: number;
+  agility?: number;
+  creativity?: number;
+  tinkering?: number;
 }
 
 export interface ActionQueueItem {
@@ -61,7 +77,8 @@ export interface ActionQueueItem {
   type: string;
   targetObjectId?: ObjectId;
   durationMinutes: number;
-  remainingMinutes: number;
+  remainingMinutes?: number;
+  elapsedMinutes?: number;
 }
 
 export interface FamilyTreeRef {
@@ -97,22 +114,26 @@ export interface CatRecord {
   careerOutfit?: CareerOutfit | null;
   traits: PersonalityTrait[];
   lifeStage: LifeStage;
-  ageDays: number;
+  ageDays?: number;
   ageMinutes: number;
   lifeStatus: LifeStatus;
   needs: CatNeeds;
   skills: CatSkills;
   position: CatPosition;
   currentAction: ActionQueueItem | null;
-  family: FamilyTreeRef;
+  actionQueue?: ActionQueueItem[];
+  family?: FamilyTreeRef;
   health?: HealthStatus;
   causeOfDeath?: string;
   deceasedAtSimMinute?: number;
   jobId?: string | null;
   isAtWork?: boolean;
   isPregnant?: boolean;
+  pregnancyId?: PregnancyId;
   motherId?: CatId;
   fatherId?: CatId;
+  relationships?: Record<string, any>;
+  lastRoute?: any[];
 }
 
 export interface PregnancyRecord {

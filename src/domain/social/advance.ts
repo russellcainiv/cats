@@ -265,12 +265,30 @@ export function advanceSocial(state: WorldState, elapsedSimMinutes: number): Wor
         sentiment: 'positive'
       });
 
-      // Clear current actions
-      if (nextCats[action.initiatorId]?.currentAction?.id === action.id) {
-        nextCats[action.initiatorId] = { ...nextCats[action.initiatorId], currentAction: null };
+      // Fulfill needs and clear current actions
+      if (nextCats[action.initiatorId]) {
+        nextCats[action.initiatorId] = {
+          ...nextCats[action.initiatorId],
+          needs: {
+            ...nextCats[action.initiatorId].needs,
+            social: 100,
+            comfort: Math.min(100, (nextCats[action.initiatorId].needs.comfort ?? 50) + 20),
+            energy: Math.max(0, nextCats[action.initiatorId].needs.energy - 15),
+          },
+          currentAction: nextCats[action.initiatorId]?.currentAction?.id === action.id ? null : nextCats[action.initiatorId].currentAction,
+        };
       }
-      if (nextCats[action.targetId]?.currentAction?.id === action.id) {
-        nextCats[action.targetId] = { ...nextCats[action.targetId], currentAction: null };
+      if (nextCats[action.targetId]) {
+        nextCats[action.targetId] = {
+          ...nextCats[action.targetId],
+          needs: {
+            ...nextCats[action.targetId].needs,
+            social: 100,
+            comfort: Math.min(100, (nextCats[action.targetId].needs.comfort ?? 50) + 20),
+            energy: Math.max(0, nextCats[action.targetId].needs.energy - 15),
+          },
+          currentAction: nextCats[action.targetId]?.currentAction?.id === action.id ? null : nextCats[action.targetId].currentAction,
+        };
       }
     }
   }

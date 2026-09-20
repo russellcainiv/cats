@@ -29,24 +29,52 @@ export function inheritAppearance(
   let val: number;
 
   const sireApp = sire?.appearance || dam.appearance;
+  const damApp = dam.appearance;
 
-  // Coat Color
+  // Primary Color / Coat Color
+  const damPrimary = damApp.primaryColor ?? damApp.coatColor ?? '#F5E6D3';
+  const sirePrimary = sireApp.primaryColor ?? sireApp.coatColor ?? damPrimary;
   [val, currentRng] = nextRng(currentRng);
-  const coatColor = val < 0.45 ? dam.appearance.coatColor : val < 0.9 ? sireApp.coatColor : 'calico';
+  const primaryColor = val < 0.45 ? damPrimary : val < 0.9 ? sirePrimary : damPrimary;
 
   // Coat Pattern
+  const damPattern = damApp.pattern ?? (damApp.coatPattern as any) ?? 'tabby';
+  const sirePattern = sireApp.pattern ?? (sireApp.coatPattern as any) ?? damPattern;
   [val, currentRng] = nextRng(currentRng);
-  const coatPattern = val < 0.5 ? dam.appearance.coatPattern : sireApp.coatPattern;
+  const pattern = val < 0.5 ? damPattern : sirePattern;
+
+  // Breed
+  const damBreed = damApp.breed ?? 'domestic_shorthair';
+  const sireBreed = sireApp.breed ?? damBreed;
+  [val, currentRng] = nextRng(currentRng);
+  const breed = val < 0.5 ? damBreed : sireBreed;
+
+  // Body Type
+  const damBody = damApp.bodyType ?? 'petite';
+  const sireBody = sireApp.bodyType ?? damBody;
+  [val, currentRng] = nextRng(currentRng);
+  const bodyType = val < 0.5 ? damBody : sireBody;
 
   // Eye Color
+  const damEye = damApp.eyeColor ?? 'amber';
+  const sireEye = sireApp.eyeColor ?? damEye;
   [val, currentRng] = nextRng(currentRng);
-  const eyeColor = val < 0.5 ? dam.appearance.eyeColor : sireApp.eyeColor;
+  const eyeColor = val < 0.5 ? damEye : sireEye;
+
+  // Secondary Color
+  const secondaryColor = val < 0.5 ? damApp.secondaryColor : sireApp.secondaryColor;
 
   return [
     {
-      coatColor,
-      coatPattern,
+      breed,
+      primaryColor,
+      secondaryColor,
+      pattern,
       eyeColor,
+      bodyType,
+      // Backward compatibility aliases
+      coatColor: primaryColor,
+      coatPattern: String(pattern),
     },
     currentRng,
   ];

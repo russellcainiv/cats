@@ -41,6 +41,7 @@ describe('Lifecycle Defect Remediation & Invariants', () => {
     expect(tickState.lifecycle.pregnancies['preg_canonical_1']).toBeDefined();
 
     // 2. Trigger birth - successfully delivers kittens and removes active pregnancy
+    tickState.clock.simMinute = 5320;
     const birthRes = executeBirth(
       tickState,
       { type: 'TRIGGER_BIRTH', payload: { pregnancyId: 'preg_canonical_1', kittenNames: ['K1', 'K2'] } },

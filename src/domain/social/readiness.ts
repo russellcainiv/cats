@@ -41,16 +41,21 @@ export function checkMooMooEligibility(
     return { eligible: false, reason: 'Cats must be adults to Moo-Moo' };
   }
 
-  // Close family links check
+  // Close family links check with canonical motherId/fatherId and validated fallback for legacy family fields
+  const dam1 = initiator.motherId ?? initiator.family?.damId ?? undefined;
+  const sire1 = initiator.fatherId ?? initiator.family?.sireId ?? undefined;
+  const dam2 = partner.motherId ?? partner.family?.damId ?? undefined;
+  const sire2 = partner.fatherId ?? partner.family?.sireId ?? undefined;
+
   const isParentChild =
-    initiator.motherId === partner.id ||
-    initiator.fatherId === partner.id ||
-    partner.motherId === initiator.id ||
-    partner.fatherId === initiator.id;
+    (dam1 && dam1 === partner.id) ||
+    (sire1 && sire1 === partner.id) ||
+    (dam2 && dam2 === initiator.id) ||
+    (sire2 && sire2 === initiator.id);
 
   const isSibling =
-    (initiator.motherId && initiator.motherId === partner.motherId) ||
-    (initiator.fatherId && initiator.fatherId === partner.fatherId);
+    (dam1 && dam2 && dam1 === dam2) ||
+    (sire1 && sire2 && sire1 === sire2);
 
   if (isParentChild || isSibling) {
     return { eligible: false, reason: 'Close family members cannot Moo-Moo' };

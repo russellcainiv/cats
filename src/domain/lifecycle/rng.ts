@@ -172,7 +172,7 @@ export function createRngAdapter(rng: RngStateData): SeededRng {
       // Fallback
     }
   }
-  const seeded = new SeededRng(rng.seed ?? 12345);
+  const seeded = new SeededRng(rng.seed ?? 1337);
   if (rng.counter && rng.counter > 0) {
     for (let i = 0; i < rng.counter; i++) {
       seeded.drawFloat('catchup');

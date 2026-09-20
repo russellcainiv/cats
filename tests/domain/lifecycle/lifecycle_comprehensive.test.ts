@@ -69,6 +69,7 @@ describe('Comprehensive Lifecycle Domain Test Suite', () => {
       resolved: false,
     };
     world.lifecycle.pregnancies['preg_overflow'] = preg;
+    world.clock.simMinute = 4320;
 
     const res = reduceLifecycle(
       world,

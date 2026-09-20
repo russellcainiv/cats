@@ -47,23 +47,37 @@ export interface CatPosition {
 }
 
 export interface CatAppearance {
-  coatStyle: string;
+  breed?: string;
   primaryColor: string;
-  secondaryColor: string;
+  secondaryColor?: string;
+  pattern?: 'solid' | 'tabby' | 'bicolor' | 'calico' | 'tortoiseshell' | 'pointed' | string;
   eyeColor: string;
+  bodyType?: 'petite' | 'average' | 'stocky' | 'fluffy' | string;
+  collarColor?: string;
+  accessoryId?: string;
+  // Compatibility fields
+  coatStyle?: string;
   hasBow?: boolean;
   hasCollar?: boolean;
+  coatColor?: string;
+  coatPattern?: string;
 }
 
 export interface ActionQueueItem {
   id: string;
   type: string;
-  targetCatId?: CatId;
-  targetObjectId?: ObjectId;
-  progressMinutes: number;
-  totalMinutes: number;
-  interruptible: boolean;
+  targetId?: string;
+  targetCatId?: string;
+  targetPosition?: CatPosition;
+  durationMinutes?: number;
+  totalMinutes?: number;
+  elapsedMinutes?: number;
+  progressMinutes?: number;
+  isInterruptible?: boolean;
+  interruptible?: boolean;
+  autonomous?: boolean;
   source?: 'player' | 'autonomous';
+  payload?: Record<string, unknown>;
 }
 
 export interface CareerOutfit {
@@ -87,8 +101,14 @@ export interface CatRecord {
   skills: CatSkills;
   position: CatPosition;
   currentAction: ActionQueueItem | null;
+  actionQueue?: ActionQueueItem[];
+  lastRoute?: any[];
+  moodScore?: number;
+  moodBand?: MoodBand;
+  relationships?: Record<CatId, any>;
   motherId?: CatId;
   fatherId?: CatId;
+  pregnancyId?: PregnancyId;
   isPregnant?: boolean;
   isWorking?: boolean;
   isAtWork?: boolean;

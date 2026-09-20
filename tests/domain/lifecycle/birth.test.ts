@@ -19,6 +19,7 @@ describe('Gestation & Birth Logic', () => {
     };
 
     world.lifecycle.pregnancies['preg_1'] = pregnancy;
+    world.clock.simMinute = 4320; // Gestation completed (3 sim days)
 
     const result = executeBirth(
       world,
@@ -43,6 +44,33 @@ describe('Gestation & Birth Logic', () => {
     expect(kitten1.family.sireId).toBe('cat_sire');
     expect(kitten1.family.damId).toBe('cat_dam');
     expect(kitten1.family.generation).toBe(2);
+  });
+
+  it('rejects TRIGGER_BIRTH before dueAtSimMinute with PREMATURE_GESTATION', () => {
+    const world = createTestWorldState();
+    const pregnancy: PregnancyRecord = {
+      id: 'preg_premature',
+      parentIds: ['cat_dam', 'cat_sire'],
+      damId: 'cat_dam',
+      sireId: 'cat_sire',
+      startedAtSimMinute: 0,
+      dueAtSimMinute: 4320,
+      reservedSlots: 1,
+      conceptionEventId: 'evt_conception_premature',
+    };
+    world.lifecycle.pregnancies['preg_premature'] = pregnancy;
+    world.clock.simMinute = 2000; // Premature (< 4320)
+
+    const result = executeBirth(
+      world,
+      { type: 'TRIGGER_BIRTH', payload: { pregnancyId: 'preg_premature' } },
+      createTestCommandContext()
+    );
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error.code).toBe('PREMATURE_GESTATION');
+    }
   });
 
   it('cancels pregnancy and releases reserved slots if dam dies during gestation', () => {
