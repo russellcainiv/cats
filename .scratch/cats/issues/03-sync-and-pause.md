@@ -1,0 +1,29 @@
+# 03 — Resume safely across devices and pause while away
+
+**What to build:** Automatically save, switch devices and resume without doubled time or competing writers.
+
+**Blocked by:** 01 — Create and resume a private saved household; 02 — Select and move an animated cat in the approved world
+
+**Status:** ready-for-agent
+
+**Requirements:** R09, R10
+
+## Acceptance criteria
+
+- [ ] Enforce one writer with server-issued lease epoch, TTL, renewal and explicit takeover; reject stale writers.
+- [ ] Use revision CAS and request idempotency; a lost response retried after commit cannot write twice.
+- [ ] Pause on close, hidden tab, lost lease or connectivity loss; no wall-clock catch-up after resuming.
+- [ ] Retain a local conflict recovery copy and show Saving/Saved/Reconnecting honestly.
+- [ ] Deliver the actual UI, domain behavior, persistence/API validation, failure states and tests for this slice. Do not mark complete for mock data, static screenshots, or an isolated domain function.
+- [ ] Dogfood its whole workflow on desktop and phone; capture and OPEN every screenshot, record what was inspected, and fix visual defects before acceptance.
+- [ ] Obtain independent blind review against the intended request, approved art, whole-game mission and regression risks. Preserve all acceptance criteria.
+
+## Verification
+
+- Start with the observable scenario in the implementation plan for this ticket; prove a meaningful failure before implementing, then pass it with real behavior.
+- Exercise each failure and persistence case above through the highest viable application seam. Record test commands, exact commit, screenshot paths and reviewer verdict.
+- Update the requirement-to-evidence ledger. A PR or commit alone is not completion; do not close until the mission and applicable release gates are met.
+
+## Model handoff
+
+Read the full spec, behavioral contracts, approved art and this ticket's plan task before editing. Claim only this slice and its listed files; coordinate changes to shared command/save contracts. Follow prerequisites by evidence, not just an issue's status. Numeric balancing defaults are proposed and tunable; confirmed scope is not.

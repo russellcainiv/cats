@@ -1,0 +1,227 @@
+{
+  "repository": "https://github.com/russellcainiv/cats",
+  "github": {
+    "spec": {
+      "number": 1,
+      "id": 5519204869,
+      "url": "https://github.com/russellcainiv/cats/issues/1",
+      "title": "Cats \u2014 complete game specification and implementation roadmap"
+    },
+    "task-01": {
+      "number": 2,
+      "id": 5519205301,
+      "url": "https://github.com/russellcainiv/cats/issues/2",
+      "title": "[Cats 01] Create and resume a private saved household"
+    },
+    "task-02": {
+      "number": 3,
+      "id": 5519205800,
+      "url": "https://github.com/russellcainiv/cats/issues/3",
+      "title": "[Cats 02] Select and move an animated cat in the approved world"
+    },
+    "task-03": {
+      "number": 4,
+      "id": 5519206332,
+      "url": "https://github.com/russellcainiv/cats/issues/4",
+      "title": "[Cats 03] Resume safely across devices and pause while away"
+    },
+    "task-04": {
+      "number": 5,
+      "id": 5519206882,
+      "url": "https://github.com/russellcainiv/cats/issues/5",
+      "title": "[Cats 04] Create real or imaginary cats"
+    },
+    "task-05": {
+      "number": 6,
+      "id": 5519207221,
+      "url": "https://github.com/russellcainiv/cats/issues/6",
+      "title": "[Cats 05] Feed, rest, play and care for cats"
+    },
+    "task-06": {
+      "number": 7,
+      "id": 5519207453,
+      "url": "https://github.com/russellcainiv/cats/issues/7",
+      "title": "[Cats 06] Watch personalities and free will shape behavior"
+    },
+    "task-07": {
+      "number": 8,
+      "id": 5519207891,
+      "url": "https://github.com/russellcainiv/cats/issues/8",
+      "title": "[Cats 07] Buy, place, recolor, move, rotate and sell furniture"
+    },
+    "task-08": {
+      "number": 9,
+      "id": 5519208225,
+      "url": "https://github.com/russellcainiv/cats/issues/9",
+      "title": "[Cats 08] Build the floor plan, rooms and finishes"
+    },
+    "task-09": {
+      "number": 10,
+      "id": 5519208512,
+      "url": "https://github.com/russellcainiv/cats/issues/10",
+      "title": "[Cats 09] Undo and demolish without trapping cats"
+    },
+    "task-10": {
+      "number": 11,
+      "id": 5519208913,
+      "url": "https://github.com/russellcainiv/cats/issues/11",
+      "title": "[Cats 10] Offer free-build without money exploits"
+    },
+    "task-11": {
+      "number": 12,
+      "id": 5519209263,
+      "url": "https://github.com/russellcainiv/cats/issues/12",
+      "title": "[Cats 11] Paint, improve and sell artwork"
+    },
+    "task-12": {
+      "number": 13,
+      "id": 5519209790,
+      "url": "https://github.com/russellcainiv/cats/issues/13",
+      "title": "[Cats 12] Grow, harvest and sell produce"
+    },
+    "task-13": {
+      "number": 14,
+      "id": 5519210104,
+      "url": "https://github.com/russellcainiv/cats/issues/14",
+      "title": "[Cats 13] Work scheduled careers and earn promotions"
+    },
+    "task-14": {
+      "number": 15,
+      "id": 5519210633,
+      "url": "https://github.com/russellcainiv/cats/issues/15",
+      "title": "[Cats 14] Complete goals and unlock content"
+    },
+    "task-15": {
+      "number": 16,
+      "id": 5519210913,
+      "url": "https://github.com/russellcainiv/cats/issues/16",
+      "title": "[Cats 15] Travel to a lively persistent neighborhood"
+    },
+    "task-16": {
+      "number": 17,
+      "id": 5519211396,
+      "url": "https://github.com/russellcainiv/cats/issues/17",
+      "title": "[Cats 16] Shop and visit neighborhood homes"
+    },
+    "task-17": {
+      "number": 18,
+      "id": 5519211720,
+      "url": "https://github.com/russellcainiv/cats/issues/18",
+      "title": "[Cats 17] Develop friendships, rivalries and memories"
+    },
+    "task-18": {
+      "number": 19,
+      "id": 5519212058,
+      "url": "https://github.com/russellcainiv/cats/issues/19",
+      "title": "[Cats 18] Fall in love with mutual readiness"
+    },
+    "task-19": {
+      "number": 20,
+      "id": 5519212520,
+      "url": "https://github.com/russellcainiv/cats/issues/20",
+      "title": "[Cats 19] Moo-Moo, chance pregnancy and safe birth"
+    },
+    "task-20": {
+      "number": 21,
+      "id": 5519212935,
+      "url": "https://github.com/russellcainiv/cats/issues/21",
+      "title": "[Cats 20] Raise kittens and follow generations"
+    },
+    "task-21": {
+      "number": 22,
+      "id": 5519213428,
+      "url": "https://github.com/russellcainiv/cats/issues/22",
+      "title": "[Cats 21] Age at a fixed pace and face old age"
+    },
+    "task-22": {
+      "number": 23,
+      "id": 5519213838,
+      "url": "https://github.com/russellcainiv/cats/issues/23",
+      "title": "[Cats 22] Treat illness and respond to danger"
+    },
+    "task-23": {
+      "number": 24,
+      "id": 5519214329,
+      "url": "https://github.com/russellcainiv/cats/issues/24",
+      "title": "[Cats 23] Memorialize cats and receive ghost visits"
+    },
+    "task-24": {
+      "number": 25,
+      "id": 5519214615,
+      "url": "https://github.com/russellcainiv/cats/issues/25",
+      "title": "[Cats 24] Own and operate a cat caf\u00e9"
+    },
+    "task-25": {
+      "number": 26,
+      "id": 5519214907,
+      "url": "https://github.com/russellcainiv/cats/issues/26",
+      "title": "[Cats 25] Adopt and move adult cats to neighborhood homes"
+    },
+    "task-26": {
+      "number": 27,
+      "id": 5519215128,
+      "url": "https://github.com/russellcainiv/cats/issues/27",
+      "title": "[Cats 26] Make the private gift welcoming and understandable"
+    },
+    "task-27": {
+      "number": 28,
+      "id": 5519215489,
+      "url": "https://github.com/russellcainiv/cats/issues/28",
+      "title": "[Cats 27] Complete coherent game art and content"
+    },
+    "task-28": {
+      "number": 29,
+      "id": 5519215990,
+      "url": "https://github.com/russellcainiv/cats/issues/29",
+      "title": "[Cats 28] Finish all controls for touch, keyboard and mouse"
+    },
+    "task-29": {
+      "number": 30,
+      "id": 5519216241,
+      "url": "https://github.com/russellcainiv/cats/issues/30",
+      "title": "[Cats 29] Survive migrations, corruption and interrupted saves"
+    },
+    "task-30": {
+      "number": 31,
+      "id": 5519216761,
+      "url": "https://github.com/russellcainiv/cats/issues/31",
+      "title": "[Cats 30] Balance a complete household lifetime"
+    },
+    "task-31": {
+      "number": 32,
+      "id": 5519217098,
+      "url": "https://github.com/russellcainiv/cats/issues/32",
+      "title": "[Cats 31] Blind-review and dogfood the complete game"
+    },
+    "task-32": {
+      "number": 33,
+      "id": 5519217399,
+      "url": "https://github.com/russellcainiv/cats/issues/33",
+      "title": "[Cats 32] Release the verified private gift"
+    },
+    "map": {
+      "number": 34,
+      "id": 5519218010,
+      "url": "https://github.com/russellcainiv/cats/issues/34",
+      "title": "Cats \u2014 decisions to validate during implementation"
+    },
+    "01-recipient": {
+      "number": 35,
+      "id": 5519218288,
+      "url": "https://github.com/russellcainiv/cats/issues/35",
+      "title": "Personalize the gift using her real cats"
+    },
+    "02-balance": {
+      "number": 36,
+      "id": 5519218709,
+      "url": "https://github.com/russellcainiv/cats/issues/36",
+      "title": "Validate the fixed lifespan and household economy"
+    },
+    "03-phone-art": {
+      "number": 37,
+      "id": 5519219003,
+      "url": "https://github.com/russellcainiv/cats/issues/37",
+      "title": "Approve the playable phone composition"
+    }
+  }
+}
