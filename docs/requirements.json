@@ -1,0 +1,127 @@
+[
+  {
+    "id": "R01",
+    "title": "Browser cat household simulation",
+    "decision": "Direct a household of cats with personalities and free will."
+  },
+  {
+    "id": "R02",
+    "title": "All play pillars",
+    "decision": "Personalities/drama, building/decorating, and care/goals/progression are all core."
+  },
+  {
+    "id": "R03",
+    "title": "Cat antics and whimsical lives",
+    "decision": "Real feline behavior alongside hobbies, adventures, goals, careers, and romance."
+  },
+  {
+    "id": "R04",
+    "title": "Phone and computer parity",
+    "decision": "Phone and computer are equally important; core actions work on both."
+  },
+  {
+    "id": "R05",
+    "title": "Approved art",
+    "decision": "Use the approved A + B image: pastel cartoon cats and furnishings, overhead cutaway home, pixel-detailed neighborhood."
+  },
+  {
+    "id": "R06",
+    "title": "Full house building",
+    "decision": "Build rooms, walls, doors and decorate with furniture, colors and cat furnishings."
+  },
+  {
+    "id": "R07",
+    "title": "Real and fictional cats",
+    "decision": "Recreate real cats and create or adopt fictional cats, with names, looks and personalities."
+  },
+  {
+    "id": "R08",
+    "title": "Death and permanent loss",
+    "decision": "Death and permanent loss are explicitly in scope; do not restore the superseded no-death boundary."
+  },
+  {
+    "id": "R09",
+    "title": "Pause when closed",
+    "decision": "No simulation time, aging, needs decay or death while the game is closed."
+  },
+  {
+    "id": "R10",
+    "title": "Automatic synced saves",
+    "decision": "Continue the same household automatically between computer and phone."
+  },
+  {
+    "id": "R11",
+    "title": "Private gift",
+    "decision": "Game access is for her and testing; public source does not authorize public gameplay registration."
+  },
+  {
+    "id": "R12",
+    "title": "Money and unlocks",
+    "decision": "Earn game money and unlock content in normal play."
+  },
+  {
+    "id": "R13",
+    "title": "Optional free-build",
+    "decision": "Offer optional free-build alongside earned progression."
+  },
+  {
+    "id": "R14",
+    "title": "Careers",
+    "decision": "Scheduled careers with skills and promotions."
+  },
+  {
+    "id": "R15",
+    "title": "Hobbies and businesses",
+    "decision": "Hobbies and little businesses are also income sources."
+  },
+  {
+    "id": "R16",
+    "title": "Moo-Moo terminology",
+    "decision": "Call the action exactly Moo-Moo."
+  },
+  {
+    "id": "R17",
+    "title": "Mutual readiness",
+    "decision": "Cats must be in love, aligned, and in the mood; player input cannot override the other cat."
+  },
+  {
+    "id": "R18",
+    "title": "Autonomous and directed",
+    "decision": "Moo-Moo can be initiated by cats or suggested by the player."
+  },
+  {
+    "id": "R19",
+    "title": "Chance of kittens",
+    "decision": "Moo-Moo carries a chance of kittens, not a guaranteed pregnancy."
+  },
+  {
+    "id": "R20",
+    "title": "Eight-cat capacity",
+    "decision": "Maximum eight living household cats, including kittens."
+  },
+  {
+    "id": "R21",
+    "title": "Moo-Moo at capacity",
+    "decision": "At eight cats, Moo-Moo remains available but cannot initiate a new pregnancy."
+  },
+  {
+    "id": "R22",
+    "title": "Memorial and ghosts",
+    "decision": "Death creates a memorial; occasional ghost visits do not resurrect the cat."
+  },
+  {
+    "id": "R23",
+    "title": "Fixed lifespan",
+    "decision": "Pace between normal and slow; no adjustable lifespan setting."
+  },
+  {
+    "id": "R24",
+    "title": "One neighborhood",
+    "decision": "One lively playable neighborhood with homes, café, park, shops and other cats."
+  },
+  {
+    "id": "R25",
+    "title": "Included picture",
+    "decision": "Include the exact approved image in the model handoff and repository."
+  }
+]
