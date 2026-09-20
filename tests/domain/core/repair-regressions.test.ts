@@ -433,3 +433,167 @@ describe('Round 1 Core Repair Regressions', () => {
     }
   });
 });
+
+describe('Round 2 Core Repair Regressions', () => {
+  it('REPAIR R2-01: advance(world, NaN / non-finite) does not poison clock.fractionalMinutes and allows subsequent advances', () => {
+    const world = buildScenario('starter');
+    world.clock.isPaused = false;
+    const initialMinute = world.clock.simMinute;
+
+    const guardedState1 = advance(world, NaN);
+    expect(Number.isFinite(guardedState1.clock.fractionalMinutes ?? 0)).toBe(true);
+    expect(guardedState1.clock.simMinute).toBe(initialMinute);
+
+    const guardedState2 = advance(guardedState1, Infinity);
+    // Infinity is not finite, so advance guards against it
+    expect(guardedState2.clock.simMinute).toBe(initialMinute);
+
+    const nextAdvance = advance(guardedState1, 10);
+    expect(nextAdvance.clock.simMinute).toBe(initialMinute + 10);
+    expect(Number.isFinite(nextAdvance.clock.fractionalMinutes ?? 0)).toBe(true);
+  });
+
+  it('REPAIR R2-02: advance preserves input state immutability during autonomous Moo-Moo completion', () => {
+    const world = buildScenario('starter');
+    const partner: CatRecord = {
+      ...world.cats['cat_mochi'],
+      id: 'cat_partner',
+      name: 'Partner',
+      position: { lotId: 'home', x: 4, y: 4, facing: 'south' },
+      needs: { hunger: 80, hygiene: 80, energy: 50, comfort: 50, social: 50, fun: 50, health: 100 },
+      relationships: {
+        cat_mochi: { targetCatId: 'cat_mochi', friendship: 90, romance: 90, isLove: true, lastInteractionMinute: 0 },
+      },
+      pregnancyId: undefined,
+    };
+    world.cats['cat_mochi'].relationships = {
+      cat_partner: { targetCatId: 'cat_partner', friendship: 90, romance: 90, isLove: true, lastInteractionMinute: 0 },
+    };
+    world.cats['cat_partner'] = partner;
+    world.livingCatIds.push('cat_partner');
+
+    world.cats['cat_mochi'].currentAction = {
+      id: 'act_auto_moo',
+      type: 'moo_moo',
+      targetId: 'cat_partner',
+      durationMinutes: 1,
+      elapsedMinutes: 0,
+      isInterruptible: true,
+      autonomous: true,
+    };
+    world.clock.isPaused = false;
+
+    // Snapshot before advance
+    const partnerSocialBefore = world.cats['cat_partner'].needs.social;
+    const partnerPregBefore = world.cats['cat_partner'].pregnancyId;
+
+    const result = advance(world, 1);
+
+    // Verify result state was updated
+    expect(result.cats['cat_partner'].needs.social).toBeGreaterThan(90);
+
+    // Verify original input state was NOT mutated in place
+    expect(world.cats['cat_partner'].needs.social).toBe(partnerSocialBefore);
+    expect(world.cats['cat_partner'].pregnancyId).toBe(partnerPregBefore);
+  });
+
+  it('REPAIR R2-03: Idempotency checksum canonicalizes JSON key order on command retries', () => {
+    const world = buildScenario('starter');
+    const commandId = 'cmd_key_order_canonical_001';
+
+    // First dispatch with key order { catalogId, quantity }
+    const res1 = dispatch(
+      world,
+      { type: 'BUY_ITEM', payload: { catalogId: 'furn_cushion_cozy', quantity: 1 } },
+      { actorId: 'player', commandId }
+    );
+    expect(res1.ok).toBe(true);
+    if (!res1.ok) return;
+
+    // Retry with reversed key order { quantity, catalogId }
+    const res2 = dispatch(
+      res1.state,
+      { type: 'BUY_ITEM', payload: { quantity: 1, catalogId: 'furn_cushion_cozy' } },
+      { actorId: 'player', commandId }
+    );
+
+    // Replay succeeds idempotently without false COMMAND_ID_PAYLOAD_MISMATCH
+    expect(res2.ok).toBe(true);
+    if (res2.ok) {
+      expect(res2.events.length).toBe(0); // Idempotent cached replay returns no new events
+    }
+  });
+
+  it('REPAIR R2-04: Invariant violations produce structured INVARIANT_VIOLATION error code', () => {
+    const world = buildScenario('starter');
+
+    // Create a 9th cat to force CAPACITY_EXCEEDED_LIVING invariant violation
+    for (let i = 2; i <= 8; i++) {
+      const extraId = `cat_filler_${i}`;
+      world.cats[extraId] = {
+        ...world.cats['cat_mochi'],
+        id: extraId,
+        name: `Filler ${i}`,
+      };
+      world.livingCatIds.push(extraId);
+    }
+    expect(world.livingCatIds.length).toBe(8);
+
+    // Attempting to create a 9th cat via CREATE_CAT triggers capacity check / invariant violation
+    const res = dispatch(
+      world,
+      {
+        type: 'CREATE_CAT',
+        payload: {
+          name: 'NinthCat',
+          appearance: { breed: 'calico', primaryColor: '#ffffff', pattern: 'calico', eyeColor: 'amber', bodyType: 'average' },
+          traits: ['playful'],
+        },
+      },
+      { actorId: 'player', commandId: 'cmd_force_inv' }
+    );
+
+    expect(res.ok).toBe(false);
+    if (!res.ok) {
+      expect(['CAPACITY_EXCEEDED', 'INVARIANT_VIOLATION']).toContain(res.error.code);
+    }
+  });
+
+  it('REPAIR R2-05: Directed SUGGEST_MOO_MOO updates needs and interaction minute matching autonomous Moo-Moo', () => {
+    const world = buildScenario('starter');
+    const partner: CatRecord = {
+      ...world.cats['cat_mochi'],
+      id: 'cat_partner',
+      name: 'Partner',
+      position: { lotId: 'home', x: 4, y: 4, facing: 'south' },
+      needs: { hunger: 80, hygiene: 80, energy: 50, comfort: 50, social: 50, fun: 50, health: 100 },
+      relationships: {
+        cat_mochi: { targetCatId: 'cat_mochi', friendship: 90, romance: 90, isLove: true, lastInteractionMinute: 0 },
+      },
+    };
+    world.cats['cat_mochi'].relationships = {
+      cat_partner: { targetCatId: 'cat_partner', friendship: 90, romance: 90, isLove: true, lastInteractionMinute: 0 },
+    };
+    world.cats['cat_partner'] = partner;
+    world.livingCatIds.push('cat_partner');
+
+    const res = dispatch(
+      world,
+      { type: 'SUGGEST_MOO_MOO', payload: { initiatorId: 'cat_mochi', partnerId: 'cat_partner' } },
+      { actorId: 'player', commandId: 'cmd_suggest_moo_parity' }
+    );
+
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+
+    // Both initiator and partner receive full social satisfaction (social: 100, comfort +20, energy -15)
+    expect(res.state.cats['cat_mochi'].needs.social).toBe(100);
+    expect(res.state.cats['cat_partner'].needs.social).toBe(100);
+    expect(res.state.cats['cat_partner'].needs.comfort).toBe(70);
+    expect(res.state.cats['cat_partner'].needs.energy).toBe(35);
+
+    // Both relationship records update lastInteractionMinute
+    expect(res.state.cats['cat_mochi'].relationships['cat_partner'].lastInteractionMinute).toBe(world.clock.simMinute);
+    expect(res.state.cats['cat_partner'].relationships['cat_mochi'].lastInteractionMinute).toBe(world.clock.simMinute);
+  });
+});

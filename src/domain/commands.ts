@@ -7,7 +7,7 @@ import { createDomainEvent } from './core/events';
 import { appendReceipt, createReceipt, findReceipt } from './core/idempotency';
 import { cellKey, findPath } from './core/navigation';
 import { handleSubsystemCommand } from './core/subsystems';
-import { assertInvariants } from './invariants';
+import { assertInvariants, DomainInvariantError } from './invariants';
 import { SeededRng } from './rng';
 import {
   ActionQueueItem,
@@ -563,6 +563,16 @@ export function dispatch(
 
     return { ok: true, state: nextState, events };
   } catch (err: any) {
+    if (err instanceof DomainInvariantError || err?.code === 'INVARIANT_VIOLATION' || err?.name === 'DomainInvariantError') {
+      return {
+        ok: false,
+        state,
+        error: {
+          code: 'INVARIANT_VIOLATION',
+          message: err?.message || 'Domain invariant violation',
+        },
+      };
+    }
     return {
       ok: false,
       state,

@@ -36,8 +36,8 @@ export const MAX_SIM_MINUTES_PER_ADVANCE = 60; // Clamp large skips (no absent-t
  * advance(state, 10) === 10 * advance(state, 1)
  */
 export function advance(state: WorldState, elapsedSimMinutes: number): WorldState {
-  // 1. Paused / Closed / Zero-time Check (R09: No absent-time progression)
-  if (state.clock.isPaused || elapsedSimMinutes <= 0) {
+  // 1. Paused / Closed / Zero-time / Non-finite Check (R09: No absent-time progression)
+  if (state.clock.isPaused || !Number.isFinite(elapsedSimMinutes) || elapsedSimMinutes <= 0) {
     return state;
   }
 
@@ -53,7 +53,8 @@ export function advance(state: WorldState, elapsedSimMinutes: number): WorldStat
   }
 
   // Fixed-step sub-stepping with fractional minute accumulation
-  let totalMinutes = (state.clock.fractionalMinutes ?? 0) + clampedMinutes;
+  const safeFractional = Number.isFinite(state.clock.fractionalMinutes) ? (state.clock.fractionalMinutes ?? 0) : 0;
+  let totalMinutes = safeFractional + clampedMinutes;
   let current = state;
 
   while (totalMinutes >= 1 && !current.clock.isPaused && current.livingCatIds.length > 0) {
@@ -185,9 +186,19 @@ export function stepSingleMinute(state: WorldState): WorldState {
     // Handle Moo-Moo action completion effects
     if (actionResult.completedAction && actionResult.completedAction.type === 'moo_moo') {
       const partnerId = actionResult.completedAction.targetId;
-      const partner = partnerId ? catsMap[partnerId] : undefined;
+      const partnerOrig = partnerId ? catsMap[partnerId] : undefined;
 
-      if (partner && partner.lifeStatus === 'living') {
+      if (partnerOrig && partnerOrig.lifeStatus === 'living') {
+        let partner: CatRecord = {
+          ...partnerOrig,
+          needs: { ...partnerOrig.needs },
+          relationships: { ...partnerOrig.relationships },
+        };
+        cat = {
+          ...cat,
+          needs: { ...cat.needs },
+          relationships: { ...cat.relationships },
+        };
         const isAdults = cat.lifeStage === 'adult' && partner.lifeStage === 'adult';
         const rel1 = cat.relationships[partner.id];
         const rel2 = partner.relationships[cat.id];
@@ -252,7 +263,7 @@ export function stepSingleMinute(state: WorldState): WorldState {
               };
 
               pregnanciesMap[pregnancyId] = pregnancy;
-              partner.pregnancyId = pregnancyId;
+              partner = { ...partner, pregnancyId };
               catsMap[partner.id] = partner;
 
               newEvents.push(

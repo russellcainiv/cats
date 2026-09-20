@@ -8,6 +8,21 @@ export function findReceipt(receipts: readonly CommandReceipt[], commandId: stri
   return receipts.find((r) => r.commandId === commandId);
 }
 
+function canonicalizeJson(value: unknown): unknown {
+  if (value === null || typeof value !== 'object') {
+    return value;
+  }
+  if (Array.isArray(value)) {
+    return value.map(canonicalizeJson);
+  }
+  const sortedKeys = Object.keys(value as Record<string, unknown>).sort();
+  const result: Record<string, unknown> = {};
+  for (const key of sortedKeys) {
+    result[key] = canonicalizeJson((value as Record<string, unknown>)[key]);
+  }
+  return result;
+}
+
 export function createReceipt(
   commandId: string,
   simMinute: number,
@@ -16,8 +31,9 @@ export function createReceipt(
   success: boolean,
   payload: unknown
 ): CommandReceipt {
-  // Simple deterministic hash of payload for verification
-  const payloadStr = JSON.stringify(payload ?? {});
+  // Canonical deterministic hash of payload for verification (independent of JSON key order)
+  const canonicalPayload = canonicalizeJson(payload ?? {});
+  const payloadStr = JSON.stringify(canonicalPayload);
   let hashNum = 0;
   for (let i = 0; i < payloadStr.length; i++) {
     hashNum = (Math.imul(31, hashNum) + payloadStr.charCodeAt(i)) | 0;

@@ -520,7 +520,53 @@ export function reduceSocial(
       );
 
       const events: DomainEvent[] = [startEvent];
-      let nextState = { ...state };
+
+      // Update needs and interaction timestamps identically to autonomous Moo-Moo
+      const relInit = initiator.relationships[partnerId];
+      const relPart = partner.relationships[initiatorId];
+
+      const updatedInitiator: CatRecord = {
+        ...initiator,
+        needs: {
+          ...initiator.needs,
+          social: 100,
+          comfort: Math.min(100, initiator.needs.comfort + 20),
+          energy: Math.max(0, initiator.needs.energy - 15),
+        },
+        relationships: {
+          ...initiator.relationships,
+          [partnerId]: {
+            ...(relInit ?? { targetCatId: partnerId, friendship: 0, romance: 0, isLove: false, lastInteractionMinute: 0 }),
+            lastInteractionMinute: state.clock.simMinute,
+          },
+        },
+      };
+
+      let updatedPartner: CatRecord = {
+        ...partner,
+        needs: {
+          ...partner.needs,
+          social: 100,
+          comfort: Math.min(100, partner.needs.comfort + 20),
+          energy: Math.max(0, partner.needs.energy - 15),
+        },
+        relationships: {
+          ...partner.relationships,
+          [initiatorId]: {
+            ...(relPart ?? { targetCatId: initiatorId, friendship: 0, romance: 0, isLove: false, lastInteractionMinute: 0 }),
+            lastInteractionMinute: state.clock.simMinute,
+          },
+        },
+      };
+
+      let nextState: WorldState = {
+        ...state,
+        cats: {
+          ...state.cats,
+          [initiatorId]: updatedInitiator,
+          [partnerId]: updatedPartner,
+        },
+      };
 
       const availableCapacity = calculateAvailableCapacity(state);
 
@@ -542,11 +588,12 @@ export function reduceSocial(
             conceptionEventId: startEvent.id,
           };
 
+          updatedPartner = { ...updatedPartner, pregnancyId };
           nextState = {
             ...nextState,
             cats: {
               ...nextState.cats,
-              [partnerId]: { ...partner, pregnancyId },
+              [partnerId]: updatedPartner,
             },
             lifecycle: {
               ...nextState.lifecycle,

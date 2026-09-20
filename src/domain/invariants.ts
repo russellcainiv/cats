@@ -138,10 +138,21 @@ export function validateInvariants(state: WorldState): InvariantViolation[] {
   return violations;
 }
 
+export class DomainInvariantError extends Error {
+  readonly code = 'INVARIANT_VIOLATION' as const;
+  readonly violations: InvariantViolation[];
+
+  constructor(violations: InvariantViolation[]) {
+    const errorDetails = violations.map((v) => `[${v.code}] ${v.message}`).join('\n');
+    super(`Domain Invariant Violation(s):\n${errorDetails}`);
+    this.name = 'DomainInvariantError';
+    this.violations = violations;
+  }
+}
+
 export function assertInvariants(state: WorldState): void {
   const violations = validateInvariants(state);
   if (violations.length > 0) {
-    const errorDetails = violations.map((v) => `[${v.code}] ${v.message}`).join('\n');
-    throw new Error(`Domain Invariant Violation(s):\n${errorDetails}`);
+    throw new DomainInvariantError(violations);
   }
 }
