@@ -15,7 +15,11 @@ Objective: AGY Gemini 3.8 builds the complete game; Codex orchestrates and quali
 - Engine AGY: managed exec 84743, isolated worktree /Users/russell/.codex/worktrees/cats-engine/Cats, branch codex/feat-game-engine-20260920. Owns shared domain schema, dispatch, selectors, deterministic clock/RNG, creation/care/autonomy. Publishing shared contract before peers integrate.
 - World/UI AGY: managed exec 82629, isolated worktree /Users/russell/.codex/worktrees/cats-world/Cats, branch codex/feat-world-ui-20260920. Owns Pixi world, responsive DOM HUD, art, creator/onboarding presentation.
 - Acceptance AGY 25989 completed its read-only audit in work/acceptance. Audit is planning evidence, not a runtime pass. Coordinator must correct any audit wording implying pixel comparison of live gameplay against the generative direction image; direction review and deterministic duplicate capture are distinct.
-- Jules: installed CLI authenticated. Existing GitHub App 107713643 does not include Cats. GitHub UI requires fresh identity confirmation; the current CLI token also receives 403 for adding Cats. BrowserOS page 14 has that identity check; async user question pending. No Cats Jules session dispatched yet.
+- Jules GitHub access: owner completed identity verification; Cats was added to existing App107713643 while preserving all prior repository selections. CLI confirms Cats access.
+- Five Jules sessions in progress: building9535268157668204742; social16480198592399971106; economy17961442789041112320; neighborhood11318609142949681294; lifecycle11834744372958765161. Scope and adapter contract were sent with each mission.
+- Founder added career clothes at work departure. R14/spec/tasks13+27 and GitHub14+28 updated. Economy has state requirement in initial mission; world and core have coordinator addition files. Planning validation still passes.
+- Jules knowledge:84canonical memories authored from confirmed decisions, all32ticket criteria and technical/quality contracts. Memory use enabled. Live Jules sessions additionally create learning memories; verification must distinguish those from the canonical pack and correct any wrong task-to-issue mapping.
+- Core first delivery b5f4c86 received; independent AGY core review running in managed session39063. No runtime acceptance granted.
 - Next: publish core contract; fan out building, social/family, economy, lifecycle, and neighborhood lanes. Continue AGY while Jules enrollment needs the identity check. Capture unchanged running artifact twice before visual judging.
 
 ## Round ledger

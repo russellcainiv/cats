@@ -1,0 +1,13 @@
+{
+  "verifiedAt": "2026-09-20",
+  "additional": 2,
+  "canonicalExact": 84,
+  "canonicalExpected": 84,
+  "duplicates": 0,
+  "enabled": true,
+  "hasMore": false,
+  "missing": [],
+  "total": 86,
+  "url": "https://jules.google.com/repo/github/russellcainiv/cats/knowledge",
+  "inspection": "Opened and viewed actual Jules Cats Knowledge screenshot. Correct repository visible, Memories toggle enabled, canonical entries visible. Vendor cards truncate long text visually; full saved text was verified through rendered DOM across all loaded pages. Two additional notes are Jules-generated environment observations, not product authority."
+}
