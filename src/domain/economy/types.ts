@@ -36,6 +36,12 @@ export const CAREER_OUTFITS: Record<CareerId, OutfitDefinition> = {
   }
 };
 
+export interface CareerOutfit {
+  outfitId: string;
+  careerId: string;
+  rank: number;
+}
+
 export interface CatWorkState {
   catId: string;
   careerId: CareerId;
@@ -46,22 +52,40 @@ export interface CatWorkState {
   lastPaidSimMinute: number;
   daysWorked: number;
   missedShifts: number;
+  commuteUntilSimMinute?: number;
+}
+
+export interface CareerRankConfig {
+  rank: 1 | 2 | 3;
+  title: string;
+  hourlyWage: number;
+  requiredSkill: 'painting' | 'gardening' | 'social';
+  requiredSkillLevel: number;
+  requiredDaysWorked: number;
+  requiredPerformance: number;
+  shiftStartHour: number; // e.g. 8 for 08:00
+  shiftEndHour: number;   // e.g. 16 for 16:00
+  workDays: number[];     // e.g. [1, 2, 3, 4, 5] (Mon-Fri, 0 = Sun)
 }
 
 export interface CareerConfig {
   id: CareerId;
   name: string;
   outfit: OutfitDefinition;
-  ranks: Array<{
-    rank: 1 | 2 | 3;
-    title: string;
-    hourlyWage: number;
-    requiredSkill: 'painting' | 'gardening' | 'social';
-    requiredSkillLevel: number;
-    shiftStartHour: number; // e.g. 9 for 09:00
-    shiftEndHour: number;   // e.g. 17 for 17:00
-    workDays: number[];     // e.g. [1, 2, 3, 4, 5] (Mon-Fri, 0 = Sun)
-  }>;
+  ranks: CareerRankConfig[];
+}
+
+export interface CareerRecord {
+  catId: string;
+  careerId: CareerId;
+  rank: 1 | 2 | 3;
+  shiftStartHour: number;
+  shiftEndHour: number;
+  workDays: number[];
+  performance: number; // 0 - 100
+  title?: string;
+  hourlyWage?: number;
+  isAtWork?: boolean;
 }
 
 export interface Artwork {
@@ -84,6 +108,7 @@ export interface EaselState {
   progressMinutes: number;
   targetMinutes: number;
   artworkTitle?: string;
+  provenance?: MoneyProvenance;
 }
 
 export type CropType = 'tomato' | 'strawberry' | 'catnip';
@@ -138,6 +163,8 @@ export interface CafeExtensionState {
   activeOrders: CafeCustomerOrder[];
   customerQueue: string[];
   lastOrderCheckSimMinute: number;
+  totalOrdersServed: number;
+  totalOrdersCreated: number;
 }
 
 export type GoalCategory = 'care' | 'relationships' | 'building' | 'work' | 'hobbies' | 'business' | 'neighborhood' | 'legacy';
@@ -151,6 +178,16 @@ export interface GoalDefinition {
   rewardCash: number;
 }
 
+export interface EconomyStats {
+  artworksPainted: number;
+  artworksSold: number;
+  masterpiecesPainted: number;
+  cropsHarvested: Record<string, number>;
+  totalCropsHarvested: number;
+  careActionsCompleted: number;
+  shiftsWorkedTotal: number;
+}
+
 export interface EconomyExtensionState {
   workStates: Record<string, CatWorkState>;
   easels: Record<string, EaselState>;
@@ -158,16 +195,21 @@ export interface EconomyExtensionState {
   gardenPlots: Record<string, GardenPlotState>;
   cafeDetails: CafeExtensionState;
   claimedGoalRewards: Record<string, boolean>;
+  stats?: EconomyStats;
 }
 
 // Commands
 export type EconomyCommand =
   | { type: 'JOIN_CAREER'; payload: { catId: string; careerId: CareerId } }
   | { type: 'LEAVE_CAREER'; payload: { catId: string } }
-  | { type: 'START_WORK_SHIFT'; payload: { catId: string } }
+  | { type: 'START_WORK_SHIFT'; payload: { catId: string; staged?: boolean } }
+  | { type: 'DEPART_FOR_WORK'; payload: { catId: string } }
+  | { type: 'ARRIVE_AT_WORK'; payload: { catId: string } }
+  | { type: 'RETURN_FROM_WORK'; payload: { catId: string } }
   | { type: 'FINISH_WORK_SHIFT'; payload: { catId: string } }
   | { type: 'CANCEL_WORK_SHIFT'; payload: { catId: string } }
-  | { type: 'START_PAINTING'; payload: { catId: string; easelObjectId: string } }
+  | { type: 'PROMOTE_CAREER'; payload: { catId: string } }
+  | { type: 'START_PAINTING'; payload: { catId: string; easelObjectId: string; title?: string } }
   | { type: 'PROGRESS_PAINTING'; payload: { catId: string; easelObjectId: string; elapsedMinutes: number } }
   | { type: 'FINISH_PAINTING'; payload: { catId: string; easelObjectId: string } }
   | { type: 'DISPLAY_ARTWORK'; payload: { artworkId: string; lotId: string; x: number; y: number } }

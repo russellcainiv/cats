@@ -13,9 +13,9 @@ export const CAREER_CONFIGS: Record<string, CareerConfig> = {
       description: 'A cozy green apron suitable for serving coffee and treats.'
     },
     ranks: [
-      { rank: 1, title: 'Barista Trainee', hourlyWage: 15, requiredSkill: 'social', requiredSkillLevel: 0, shiftStartHour: 8, shiftEndHour: 16, workDays: [1, 2, 3, 4, 5] },
-      { rank: 2, title: 'Head Barista', hourlyWage: 25, requiredSkill: 'social', requiredSkillLevel: 3, shiftStartHour: 8, shiftEndHour: 16, workDays: [1, 2, 3, 4, 5] },
-      { rank: 3, title: 'Café Manager', hourlyWage: 40, requiredSkill: 'social', requiredSkillLevel: 6, shiftStartHour: 8, shiftEndHour: 16, workDays: [1, 2, 3, 4, 5] }
+      { rank: 1, title: 'Barista Trainee', hourlyWage: 15, requiredSkill: 'social', requiredSkillLevel: 0, requiredDaysWorked: 0, requiredPerformance: 0, shiftStartHour: 8, shiftEndHour: 16, workDays: [1, 2, 3, 4, 5] },
+      { rank: 2, title: 'Head Barista', hourlyWage: 25, requiredSkill: 'social', requiredSkillLevel: 3, requiredDaysWorked: 3, requiredPerformance: 60, shiftStartHour: 8, shiftEndHour: 16, workDays: [1, 2, 3, 4, 5] },
+      { rank: 3, title: 'Café Manager', hourlyWage: 40, requiredSkill: 'social', requiredSkillLevel: 6, requiredDaysWorked: 7, requiredPerformance: 75, shiftStartHour: 8, shiftEndHour: 16, workDays: [1, 2, 3, 4, 5] }
     ]
   },
   garden_keeper: {
@@ -29,9 +29,9 @@ export const CAREER_CONFIGS: Record<string, CareerConfig> = {
       description: 'Sturdy denim overalls and a sunhat to protect against the sun.'
     },
     ranks: [
-      { rank: 1, title: 'Weed Puller', hourlyWage: 12, requiredSkill: 'gardening', requiredSkillLevel: 0, shiftStartHour: 7, shiftEndHour: 15, workDays: [1, 2, 3, 4, 5] },
-      { rank: 2, title: 'Landscape Caretaker', hourlyWage: 22, requiredSkill: 'gardening', requiredSkillLevel: 3, shiftStartHour: 7, shiftEndHour: 15, workDays: [1, 2, 3, 4, 5] },
-      { rank: 3, title: 'Master Botanist', hourlyWage: 38, requiredSkill: 'gardening', requiredSkillLevel: 6, shiftStartHour: 7, shiftEndHour: 15, workDays: [1, 2, 3, 4, 5] }
+      { rank: 1, title: 'Weed Puller', hourlyWage: 12, requiredSkill: 'gardening', requiredSkillLevel: 0, requiredDaysWorked: 0, requiredPerformance: 0, shiftStartHour: 7, shiftEndHour: 15, workDays: [1, 2, 3, 4, 5] },
+      { rank: 2, title: 'Landscape Caretaker', hourlyWage: 22, requiredSkill: 'gardening', requiredSkillLevel: 3, requiredDaysWorked: 3, requiredPerformance: 60, shiftStartHour: 7, shiftEndHour: 15, workDays: [1, 2, 3, 4, 5] },
+      { rank: 3, title: 'Master Botanist', hourlyWage: 38, requiredSkill: 'gardening', requiredSkillLevel: 6, requiredDaysWorked: 7, requiredPerformance: 75, shiftStartHour: 7, shiftEndHour: 15, workDays: [1, 2, 3, 4, 5] }
     ]
   },
   gallery_helper: {
@@ -45,9 +45,9 @@ export const CAREER_CONFIGS: Record<string, CareerConfig> = {
       description: 'An artistic smock and stylish red beret for gallery work.'
     },
     ranks: [
-      { rank: 1, title: 'Art Docent', hourlyWage: 18, requiredSkill: 'painting', requiredSkillLevel: 0, shiftStartHour: 10, shiftEndHour: 18, workDays: [2, 3, 4, 5, 6] },
-      { rank: 2, title: 'Exhibitions Curate', hourlyWage: 28, requiredSkill: 'painting', requiredSkillLevel: 3, shiftStartHour: 10, shiftEndHour: 18, workDays: [2, 3, 4, 5, 6] },
-      { rank: 3, title: 'Gallery Director', hourlyWage: 45, requiredSkill: 'painting', requiredSkillLevel: 6, shiftStartHour: 10, shiftEndHour: 18, workDays: [2, 3, 4, 5, 6] }
+      { rank: 1, title: 'Art Docent', hourlyWage: 18, requiredSkill: 'painting', requiredSkillLevel: 0, requiredDaysWorked: 0, requiredPerformance: 0, shiftStartHour: 10, shiftEndHour: 18, workDays: [2, 3, 4, 5, 6] },
+      { rank: 2, title: 'Exhibitions Curate', hourlyWage: 28, requiredSkill: 'painting', requiredSkillLevel: 3, requiredDaysWorked: 3, requiredPerformance: 60, shiftStartHour: 10, shiftEndHour: 18, workDays: [2, 3, 4, 5, 6] },
+      { rank: 3, title: 'Gallery Director', hourlyWage: 45, requiredSkill: 'painting', requiredSkillLevel: 6, requiredDaysWorked: 7, requiredPerformance: 75, shiftStartHour: 10, shiftEndHour: 18, workDays: [2, 3, 4, 5, 6] }
     ]
   }
 };
