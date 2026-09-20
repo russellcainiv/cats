@@ -1,13 +1,14 @@
 # Social Subsystem Integration Specification (`work/social/INTEGRATION.md`)
 
 ## 1. Ownership & Scope
-- **Owner**: Social Domain Worker (Jules)
+- **Owner**: Social Domain Worker (AGY Gemini 3.8 Flash High)
+- **Owned Worktree**: `/Users/russell/.codex/worktrees/cats-social/Cats`
 - **Owned Directories**:
   - `src/domain/social/**`
   - `tests/domain/social/**`
   - `work/social/**`
 
-## 2. Exports from `src/domain/social/index.ts`
+## 2. Module Exports (`src/domain/social/index.ts`)
 The module exports the following typed functions and interfaces for the shared engine orchestrator:
 
 ```ts
@@ -17,7 +18,13 @@ export type {
   SocialRelationship,
   SocialMemory,
   InProgressSocialAction,
-  InteractionType
+  InteractionType,
+  PregnancyRecord,
+  CareerOutfit,
+  CatRecord,
+  WorldState,
+  CommandContext,
+  CommandResult,
 } from './types';
 
 export {
@@ -29,52 +36,39 @@ export {
 export { advanceSocial } from './advance';
 export { checkMooMooEligibility, checkGeneralSocialEligibility } from './readiness';
 export { pairKey, getRelationship, updateRelationshipScore } from './relationships';
+export { SeededRng, createRngAdapter, toRngStateData, nextRandomFloat } from './rng';
 ```
 
-## 3. Typed Schema Extensions (`SocialSubsystemState`)
-The initial engine contract provided a minimal `recentInteractions` array. This worker extends `SocialSubsystemState` with full two-sided relationships, memories, pair cooldowns, and in-progress action tracking:
-
+## 3. Typed Schema Alignments & Extensions
+### Canonical Pregnancy Schema
+Aligined with `cats-engine/src/domain/state.ts` and the parallel orchestrator ruling:
 ```ts
-export interface SocialSubsystemState {
-  recentInteractions: Array<{ fromId: CatId; toId: CatId; type: string; simMinute: number }>;
-  relationships: Record<string, SocialRelationship>; // Keyed by canonical pairKey `${catA}:${catB}`
-  memories: Record<CatId, SocialMemory[]>;            // Keyed by CatId, bounded max 20 memories per cat
-  inProgressActions: InProgressSocialAction[];        // In-flight actions such as Moo-Moo
-  pairCooldowns: Record<string, number>;               // Keyed by pairKey, value is simMinute when available
-  completedActionIds: string[];                        // Completed command IDs for idempotency
-}
-
-export interface SocialRelationship {
-  friendship: number; // -100 to 100
-  romance: number;    // 0 to 100
-  isLove: boolean;    // romance >= 70 && friendship >= 40
-  isRival: boolean;   // friendship <= -40
-  isFriend: boolean;  // friendship >= 50
-  interactionCount: number;
-  lastInteractionSimMinute: number;
-}
-
-export interface SocialMemory {
-  id: string;
-  otherCatId: CatId;
-  type: 'first_kiss' | 'argument' | 'moo_moo_completed' | 'became_friends' | 'became_rivals' | 'play_session';
-  summary: string;
-  simMinute: number;
-  sentiment: 'positive' | 'negative' | 'neutral';
-}
-
-export interface InProgressSocialAction {
-  id: string;
-  type: 'moo_moo' | 'social_interaction';
-  interactionType?: InteractionType;
-  initiatorId: CatId;
-  targetId: CatId;
-  startSimMinute: number;
-  totalDurationMinutes: number;
-  elapsedMinutes: number;
-  source: 'player' | 'autonomous';
+export interface PregnancyRecord {
+  id: PregnancyId;
+  parentIds: [CatId, CatId]; // [gestatingCatId, otherParentId]
+  startedAtSimMinute: number;
+  dueAtSimMinute: number;
+  reservedSlots: number;
+  conceptionEventId: string;
+  // Compatibility aliases
+  motherId?: CatId;
+  fatherId?: CatId;
+  damId?: CatId;
+  sireId?: CatId;
+  conceptionSimMinute?: number;
+  conceivedAtSimMinute?: number;
+  dueSimMinute?: number;
+  litterSize?: number;
+  resolved?: boolean;
+  rngSeedAtConception?: number;
 }
 ```
+
+### CatRecord Base Fields & Career Outfit Preservation
+Preserves `careerOutfit?: CareerOutfit | null`, `baseAppearance?: CatAppearance`, `isAtWork?: boolean`, and `family` refs.
+
+### Deterministic PRNG (`src/domain/social/rng.ts`)
+Implements the engine's canonical Mulberry32 + SplitMix32 algorithm (`SeededRng`) with state serialization, draw tracking, and snapshot compatibility.
 
 ## 4. Commands Handled (`SocialCommand`)
 - `SUGGEST_MOO_MOO`: Player-directed proposal. Cannot override partner decline.
@@ -86,21 +80,39 @@ export interface InProgressSocialAction {
 - `MOO_MOO_STARTED`: Dispatched when a Moo-Moo action begins.
 - `MOO_MOO_COMPLETED`: Dispatched when Moo-Moo duration completes.
 - `MOO_MOO_DECLINED`: Dispatched when proposal or completion readiness fails. **Zero RNG rolls drawn.**
-- `MOO_MOO_CANCELLED`: Dispatched when action is interrupted by death, move-out, or explicit cancel.
-- `PREGNANCY_CONCEIVED`: Dispatched when eligible completion passes 25% conception draw. Creates `PregnancyRecord` in `state.lifecycle.pregnancies`.
+- `MOO_MOO_CANCELLED`: Dispatched when action is interrupted by death, move-out, redirection, or cancel.
+- `PREGNANCY_CONCEIVED`: Dispatched when eligible completion passes 25% conception draw. Creates canonical `PregnancyRecord` in `state.lifecycle.pregnancies`.
 - `SOCIAL_INTERACTION_COMPLETED`: Dispatched for general social interactions.
 
-## 6. Mutual Readiness & Capacity Rules
-1. **Readiness Matrix**: Both cats must be living adults (`lifeStage === 'adult'`), no close family links (mother/father/siblings), mood >= 60, energy >= 35, social >= 35, health >= 35, no active illness or pregnancy, not working, pair cooldown expired, and mutual love (`romance >= 70`, `friendship >= 40`).
-2. **Decline & RNG Purity**: Any decline (player or autonomous) consumes **exactly zero RNG rolls**.
-3. **Capacity Limit (8 living + reserved)**:
-   - At capacity 8 (living + reserved = 8): Romantic action completes, boosts relationship/romance, records memories, but **makes zero conception draws**.
-   - Available capacity > 0: Makes **exactly one 25% conception draw**. On success, litter size (1-3) is clamped to `Math.min(litterSize, 8 - livingCount - reservedSlots)`.
-4. **Lifecycle Handoff**: Gestation is set to 3 sim days (4320 sim minutes). Creates a `PregnancyRecord` in `lifecycle.pregnancies` for the lifecycle worker to process when due.
+## 6. Review Defects Resolved
+1. **REPRO-01 (Pregnancy Schema)**: Conceived pregnancies output `parentIds: [gestatingCatId, otherParentId]`, `startedAtSimMinute`, `dueAtSimMinute`, `reservedSlots`, `conceptionEventId`, with backwards-compatible aliases (`motherId`, `fatherId`, `damId`, `sireId`).
+2. **REPRO-02 (Capacity Leak)**: `advanceSocial` filters out resolved pregnancies when summing reserved slots (`!p.resolved`), guaranteeing that completed births and released slots immediately restore available household capacity.
+3. **REPRO-03 (Non-Deterministic Memory IDs)**: Replaced `Date.now()` with deterministic ID format `mem_${catId}_${memory.simMinute}_${memory.type}_${count}`.
+4. **REPRO-04 (Ghost Action Completion)**: `advanceSocial` verifies `initiator.currentAction?.id === action.id && target.currentAction?.id === action.id`. If either cat is redirected to another action (such as eating or sleeping), the paired action is immediately cancelled and cleared.
+5. **REPRO-07 (Double Clock Advance)**: `advanceSocial` preserves `state.clock` as authoritative from the core simulation loop and does not mutate `clock.simMinute`.
+6. **REPRO-08 (PRNG Dialect Incompatibility)**: Adopted canonical engine `SeededRng` Mulberry32 algorithm and `RngStateData.serializedState`.
 
 ## 7. Verification Evidence
-Run test suite with:
+Run focused social unit and regression tests with:
 ```bash
-npx tsx tests/domain/social/social.test.ts
+bun tests/domain/social/social.test.ts
 ```
-All 9 test suites pass cleanly.
+All 14 test suites pass cleanly:
+1. Mutual readiness matrix verified
+2. Decline and RNG purity verified
+3. At-capacity completion verified
+4. Capacity-clamped conception reservation verified
+5. Idempotency verified
+6. Deterministic replay verified
+7. Autonomy and player suggestion parity verified
+8. Pair cooldown enforcement verified
+9. Interrupted social action settlement verified
+10. REPRO-02 Regression verified: resolved pregnancies do not leak capacity
+11. REPRO-03 Regression verified: memory IDs are deterministic without Date.now()
+12. REPRO-04 Regression verified: redirection clears paired action and prevents ghost completion
+13. REPRO-07 Regression verified: advanceSocial preserves authoritative clock
+14. REPRO-08 Regression verified: canonical SeededRng adapter in social
+
+## 8. Remaining Integration Gates
+- Core engine orchestration harness in `cats-engine` to compose `advanceSocial` with central state dispatch.
+- Shared imports directly from `src/domain/state.ts` and `src/domain/rng.ts` once core repairs merge.

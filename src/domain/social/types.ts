@@ -66,10 +66,18 @@ export interface ActionQueueItem {
   source?: 'player' | 'autonomous';
 }
 
+export interface CareerOutfit {
+  outfitId: string;
+  careerId: string;
+  rank: number;
+}
+
 export interface CatRecord {
   id: CatId;
   name: string;
   appearance: CatAppearance;
+  baseAppearance?: CatAppearance;
+  careerOutfit?: CareerOutfit | null;
   traits: PersonalityTrait[];
   lifeStage: LifeStage;
   ageMinutes: number;
@@ -83,18 +91,35 @@ export interface CatRecord {
   fatherId?: CatId;
   isPregnant?: boolean;
   isWorking?: boolean;
+  isAtWork?: boolean;
   isIll?: boolean;
+  family?: {
+    sireId: CatId | null;
+    damId: CatId | null;
+    childIds: CatId[];
+    generation: number;
+  };
+  ageDays?: number;
 }
 
 export interface PregnancyRecord {
   id: PregnancyId;
-  motherId: CatId;
-  fatherId: CatId;
-  conceivedAtSimMinute: number;
+  parentIds: [CatId, CatId]; // [gestatingCatId, otherParentId]
+  startedAtSimMinute: number;
   dueAtSimMinute: number;
   reservedSlots: number;
-  litterSize: number;
-  rngSeedAtConception: number;
+  conceptionEventId: string;
+  // Compatibility fields
+  motherId?: CatId;
+  fatherId?: CatId;
+  damId?: CatId;
+  sireId?: CatId;
+  conceptionSimMinute?: number;
+  conceivedAtSimMinute?: number;
+  dueSimMinute?: number;
+  litterSize?: number;
+  resolved?: boolean;
+  rngSeedAtConception?: number;
 }
 
 export interface SimClock {

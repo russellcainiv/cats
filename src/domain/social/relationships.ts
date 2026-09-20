@@ -117,7 +117,7 @@ export function addMemory(
   const existingMemories = socialState.memories[catId] || [];
   const newMemory: SocialMemory = {
     ...memory,
-    id: `mem_${catId}_${Date.now()}_${existingMemories.length + 1}`
+    id: `mem_${catId}_${memory.simMinute}_${memory.type}_${existingMemories.length + 1}`
   };
 
   const updatedList = [newMemory, ...existingMemories].slice(0, MAX_MEMORIES_PER_CAT);

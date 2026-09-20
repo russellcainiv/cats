@@ -21,7 +21,8 @@ export function advanceSocial(state: WorldState, elapsedSimMinutes: number): Wor
     return state;
   }
 
-  const newSimMinute = state.clock.simMinute + elapsedSimMinutes;
+  // Simulation clock is authoritative and advanced by core engine.
+  const currentSimMinute = state.clock.simMinute;
   let currentRng = { ...state.rng };
   let nextEvents = [...state.events];
   let nextEventSequence = state.nextEventSequence;
@@ -35,21 +36,36 @@ export function advanceSocial(state: WorldState, elapsedSimMinutes: number): Wor
     const initiator = nextCats[action.initiatorId];
     const target = nextCats[action.targetId];
 
-    // Safe settlement check if cat missing, deceased, or moved away
-    if (
+    // Check if either participant is missing, deceased, no longer adult, at work, or redirected to another action
+    const isInterrupted =
       !initiator ||
       !target ||
       initiator.lifeStatus !== 'living' ||
-      target.lifeStatus !== 'living'
-    ) {
-      // Settle safely
+      target.lifeStatus !== 'living' ||
+      initiator.lifeStage !== 'adult' ||
+      target.lifeStage !== 'adult' ||
+      initiator.isAtWork ||
+      target.isAtWork ||
+      initiator.isWorking ||
+      target.isWorking ||
+      initiator.currentAction?.id !== action.id ||
+      target.currentAction?.id !== action.id;
+
+    if (isInterrupted) {
+      // Settle safely and clear paired action
       const cancelEvt: DomainEvent = {
         id: `evt_${nextEventSequence++}`,
         type: 'MOO_MOO_CANCELLED',
         sequence: nextEventSequence,
-        simTime: newSimMinute,
+        simTime: currentSimMinute,
         actorIds: [action.initiatorId, action.targetId].filter((id) => nextCats[id]),
-        payload: { actionId: action.id, reason: 'Participant deceased, missing, or moved away' }
+        payload: {
+          actionId: action.id,
+          reason:
+            !initiator || !target || initiator.lifeStatus !== 'living' || target.lifeStatus !== 'living'
+              ? 'Participant deceased, missing, or moved away'
+              : 'Action interrupted, redirected, or participant unavailable',
+        }
       };
       nextEvents.push(cancelEvt);
 
@@ -85,7 +101,7 @@ export function advanceSocial(state: WorldState, elapsedSimMinutes: number): Wor
       // Action completes!
       // Re-verify eligibility at completion time
       const eligibility = checkMooMooEligibility(
-        { ...state, cats: nextCats, social: nextSocial, clock: { ...state.clock, simMinute: newSimMinute } },
+        { ...state, cats: nextCats, social: nextSocial, clock: { ...state.clock, simMinute: currentSimMinute } },
         action.initiatorId,
         action.targetId
       );
@@ -98,7 +114,7 @@ export function advanceSocial(state: WorldState, elapsedSimMinutes: number): Wor
           id: `evt_${nextEventSequence++}`,
           type: 'MOO_MOO_DECLINED',
           sequence: nextEventSequence,
-          simTime: newSimMinute,
+          simTime: currentSimMinute,
           actorIds: [action.initiatorId, action.targetId],
           payload: {
             actionId: action.id,
@@ -111,7 +127,7 @@ export function advanceSocial(state: WorldState, elapsedSimMinutes: number): Wor
           ...nextSocial,
           pairCooldowns: {
             ...nextSocial.pairCooldowns,
-            [pKey]: newSimMinute + 30
+            [pKey]: currentSimMinute + 30
           }
         };
 
@@ -129,18 +145,20 @@ export function advanceSocial(state: WorldState, elapsedSimMinutes: number): Wor
         id: `evt_${nextEventSequence++}`,
         type: 'MOO_MOO_COMPLETED',
         sequence: nextEventSequence,
-        simTime: newSimMinute,
+        simTime: currentSimMinute,
         actorIds: [action.initiatorId, action.targetId],
         payload: { actionId: action.id, source: action.source }
       };
       nextEvents.push(completeEvt);
 
-      // Check household capacity
+      // Check household capacity (8 living + active reserved slots)
       const livingCount = Object.values(nextCats).filter((c) => c.lifeStatus === 'living').length;
-      const reservedLitterSlots = Object.values(nextPregnancies).reduce(
-        (sum, p) => sum + p.reservedSlots,
-        0
-      );
+      const reservedLitterSlots = Object.values(nextPregnancies)
+        .filter((p: any) => !p.resolved)
+        .reduce(
+          (sum, p: any) => sum + (p.reservedSlots ?? p.litterSize ?? 0),
+          0
+        );
 
       const totalOccupiedAndReserved = livingCount + reservedLitterSlots;
       const availableSlots = Math.max(0, 8 - totalOccupiedAndReserved);
@@ -153,29 +171,37 @@ export function advanceSocial(state: WorldState, elapsedSimMinutes: number): Wor
         // Romance action completes, BUT EXACTLY ZERO conception draws are made!
       } else {
         // Available capacity exists! Make exactly ONE 25% conception draw.
-        const drawResult = nextRandomFloat(currentRng);
+        const drawResult = nextRandomFloat(currentRng, 'moo_moo_conception', currentSimMinute);
         currentRng = drawResult.nextRng;
 
         if (drawResult.value <= 0.25) {
           // Conception succeeds! Draw litter size (1 to 3).
-          const litterResult = nextRandomFloat(currentRng);
+          const litterResult = nextRandomFloat(currentRng, 'moo_moo_litter_size', currentSimMinute);
           currentRng = litterResult.nextRng;
 
           const rawLitter = 1 + Math.floor(litterResult.value * 3); // 1, 2, or 3
           const clampedLitter = Math.max(1, Math.min(rawLitter, availableSlots));
 
-          const motherId = action.targetId; // Partner/target as mother
+          const motherId = action.targetId; // Partner/target as gestating mother
           const fatherId = action.initiatorId;
 
-          const pregId = `preg_${motherId}_${fatherId}_${newSimMinute}`;
+          const pregId = `preg_${motherId}_${fatherId}_${currentSimMinute}`;
+          const conceptionEvtId = `evt_${nextEventSequence++}`;
           pregnancyRecord = {
             id: pregId,
+            parentIds: [motherId, fatherId],
+            startedAtSimMinute: currentSimMinute,
+            dueAtSimMinute: currentSimMinute + 3 * 24 * 60, // 3 sim days = 4320 sim minutes
+            reservedSlots: clampedLitter,
+            conceptionEventId: conceptionEvtId,
+            // Compatibility fields
             motherId,
             fatherId,
-            conceivedAtSimMinute: newSimMinute,
-            dueAtSimMinute: newSimMinute + 3 * 24 * 60, // 3 sim days = 4320 sim minutes
-            reservedSlots: clampedLitter,
+            damId: motherId,
+            sireId: fatherId,
+            conceivedAtSimMinute: currentSimMinute,
             litterSize: clampedLitter,
+            resolved: false,
             rngSeedAtConception: currentRng.seed
           };
 
@@ -184,17 +210,18 @@ export function advanceSocial(state: WorldState, elapsedSimMinutes: number): Wor
 
           // Set isPregnant on mother
           if (nextCats[motherId]) {
-            nextCats[motherId] = { ...nextCats[motherId], isPregnant: true };
+            nextCats[motherId] = { ...nextCats[motherId], isPregnant: true, pregnancyId: pregId };
           }
 
           const pregEvt: DomainEvent = {
-            id: `evt_${nextEventSequence++}`,
+            id: conceptionEvtId,
             type: 'PREGNANCY_CONCEIVED',
             sequence: nextEventSequence,
-            simTime: newSimMinute,
+            simTime: currentSimMinute,
             actorIds: [motherId, fatherId],
             payload: {
               pregnancyId: pregId,
+              parentIds: [motherId, fatherId],
               motherId,
               fatherId,
               reservedSlots: clampedLitter,
@@ -208,7 +235,7 @@ export function advanceSocial(state: WorldState, elapsedSimMinutes: number): Wor
 
       // Update relationship & memories
       const existingRel = getRelationship(nextSocial, action.initiatorId, action.targetId);
-      const updatedRel = updateRelationshipScore(existingRel, 15, 20, newSimMinute);
+      const updatedRel = updateRelationshipScore(existingRel, 15, 20, currentSimMinute);
 
       nextSocial = {
         ...nextSocial,
@@ -218,7 +245,7 @@ export function advanceSocial(state: WorldState, elapsedSimMinutes: number): Wor
         },
         pairCooldowns: {
           ...nextSocial.pairCooldowns,
-          [pKey]: newSimMinute + 120 // 120 sim minutes pair cooldown after Moo-Moo
+          [pKey]: currentSimMinute + 120 // 120 sim minutes pair cooldown after Moo-Moo
         }
       };
 
@@ -227,14 +254,14 @@ export function advanceSocial(state: WorldState, elapsedSimMinutes: number): Wor
         otherCatId: action.targetId,
         type: 'moo_moo_completed',
         summary: `Shared a romantic Moo-Moo with ${nextCats[action.targetId].name}`,
-        simMinute: newSimMinute,
+        simMinute: currentSimMinute,
         sentiment: 'positive'
       });
       nextSocial = addMemory(nextSocial, action.targetId, {
         otherCatId: action.initiatorId,
         type: 'moo_moo_completed',
         summary: `Shared a romantic Moo-Moo with ${nextCats[action.initiatorId].name}`,
-        simMinute: newSimMinute,
+        simMinute: currentSimMinute,
         sentiment: 'positive'
       });
 
@@ -250,10 +277,7 @@ export function advanceSocial(state: WorldState, elapsedSimMinutes: number): Wor
 
   return {
     ...state,
-    clock: {
-      ...state.clock,
-      simMinute: newSimMinute
-    },
+    clock: state.clock,
     rng: currentRng,
     cats: nextCats,
     social: {
