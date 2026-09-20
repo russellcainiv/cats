@@ -1,8 +1,8 @@
 // src/domain/building/geometry.ts
 // Grid, Wall Topology, Collision Detection and Reachability Solver
 
-import { WorldLot, LotObject, WallSegment, DoorItem, WindowItem, CatRecord, GridCell } from '../../../work/building/harness';
-import { CatalogItem, getCatalogItem } from './catalog';
+import { WorldLot, LotObject, WallSegment, DoorItem, WindowItem, CatRecord, GridCell } from './types';
+import { getCatalogItem } from './catalog';
 
 export interface Dimension {
   width: number;
@@ -32,7 +32,7 @@ export function getTransformedInteractSpots(
   y: number,
   baseWidth: number,
   baseHeight: number,
-  interactSpots: Array<{ x: number; y: number }>,
+  interactSpots: GridCell[],
   rotation: 0 | 90 | 180 | 270 = 0
 ): GridCell[] {
   const dims = getRotatedDimensions(baseWidth, baseHeight, rotation);
@@ -72,6 +72,23 @@ export function isEdgeOnWall(x: number, y: number, orientation: 'horizontal' | '
     if (orientation === 'vertical' && wall.x1 === wall.x2 && wall.x1 === x) {
       if (y >= minY && y < maxY) return true;
     }
+  }
+  return false;
+}
+
+export function isCatIntersectingWall(catX: number, catY: number, wall: WallSegment): boolean {
+  const minX = Math.min(wall.x1, wall.x2);
+  const maxX = Math.max(wall.x1, wall.x2);
+  const minY = Math.min(wall.y1, wall.y2);
+  const maxY = Math.max(wall.y1, wall.y2);
+
+  if (wall.y1 === wall.y2) {
+    // Horizontal wall along y = wall.y1
+    if (catY === wall.y1 && catX >= minX && catX <= maxX) return true;
+  }
+  if (wall.x1 === wall.x2) {
+    // Vertical wall along x = wall.x1
+    if (catX === wall.x1 && catY >= minY && catY <= maxY) return true;
   }
   return false;
 }
@@ -122,7 +139,7 @@ export function isCellBlockedByObject(x: number, y: number, lot: WorldLot, ignor
  * Ensures:
  * 1. Cats on lot are not trapped or standing inside walls/objects.
  * 2. Every room inside the house is reachable from at least one door / lot entrance.
- * 3. All object interact spots are reachable.
+ * 3. All object interact spots are inside bounds and reachable.
  */
 export function validateLotReachability(lot: WorldLot, catsOnLot: CatRecord[]): { valid: boolean; reason?: string } {
   // Check cats positions
@@ -139,17 +156,15 @@ export function validateLotReachability(lot: WorldLot, catsOnLot: CatRecord[]): 
     }
   }
 
-  // Find entrance seed cell.
-  // We use door locations or (0,0) as seed points for BFS
-  const seedCells: GridCell[] = [];
+  // Find entrance seed cells.
+  // Door locations and lot entrance (0,0) provide seeds for BFS traversal.
+  const seedCells: GridCell[] = [{ x: 0, y: 0 }];
   if (lot.doors.length > 0) {
     for (const d of lot.doors) {
       seedCells.push({ x: d.x, y: d.y });
       if (d.orientation === 'horizontal' && d.y > 0) seedCells.push({ x: d.x, y: d.y - 1 });
       if (d.orientation === 'vertical' && d.x > 0) seedCells.push({ x: d.x - 1, y: d.y });
     }
-  } else {
-    seedCells.push({ x: 0, y: 0 });
   }
 
   // Perform BFS graph traversal
@@ -203,7 +218,7 @@ export function validateLotReachability(lot: WorldLot, catsOnLot: CatRecord[]): 
     }
   }
 
-  // 2. Verify all object interact spots are reachable
+  // 2. Verify all object interact spots are within bounds and reachable
   for (const obj of lot.objects) {
     if (!obj.interactSpots || obj.interactSpots.length === 0) continue;
     const catalog = getCatalogItem(obj.catalogId);
@@ -219,7 +234,10 @@ export function validateLotReachability(lot: WorldLot, catsOnLot: CatRecord[]): 
     );
 
     for (const spot of transformedSpots) {
-      if (isCellWithinLot(spot, lot) && !visited.has(`${spot.x},${spot.y}`)) {
+      if (!isCellWithinLot(spot, lot)) {
+        return { valid: false, reason: `Object ${obj.name} interact spot (${spot.x}, ${spot.y}) is outside lot bounds.` };
+      }
+      if (!visited.has(`${spot.x},${spot.y}`)) {
         return { valid: false, reason: `Object ${obj.name} interact spot (${spot.x}, ${spot.y}) is unreachable.` };
       }
     }
