@@ -27,7 +27,7 @@ A single-neighborhood browser simulation presents an overhead cutaway home and a
 11. **R11 — Private gift.** Access is for her and testing; public source does not authorize public gameplay registration.
 12. **R12 — Money and unlocks.** Earn game money and unlock content in normal play.
 13. **R13 — Optional free-build.** Offer free-build alongside earned progression.
-14. **R14 — Careers.** Scheduled careers with skills and promotions.
+14. **R14 — Careers.** Scheduled careers with skills and promotions. Cats wear clothes relating to their careers when they go off to work.
 15. **R15 — Hobbies and businesses.** Hobbies and little businesses are income sources.
 16. **R16 — Moo-Moo terminology.** The action is called exactly “Moo-Moo.”
 17. **R17 — Mutual readiness.** Cats must be in love, aligned, and in the mood; player input cannot override the partner.
@@ -86,6 +86,8 @@ A single-neighborhood browser simulation presents an overhead cutaway home and a
 42. As a player, I want earned mode to preserve careers and money, so that creative building does not remove the life simulation.
 43. As a player, I want career schedules and shifts to be visible, so that I can plan care around work.
 44. As a player, I want promotions to require skills and goals, so that career progress feels earned.
+
+Career outfit requirement (added by the founder on 2026-09-20): every career has recognizable work clothes that the cat automatically wears at departure and while working. Engineering default: Café Assistant apron, Garden Keeper overalls/sunhat, Gallery Helper smock/beret. Return, canceled shift, job change and interrupted work restore the ordinary look; never overwrite the cat's coat or ordinary accessories. Outfit state derives from real saved career activity, survives reload and device resume, and appears in world sprites and portraits on phone and desktop.
 45. As a player, I want painting and gardening to produce distinct outputs, so that hobbies are meaningful rather than decorative.
 46. As a player, I want to grow tomatoes, strawberries, and catnip, so that gardening has a concrete progression.
 47. As a player, I want to own and operate the café, so that a small business is a playable income source.
