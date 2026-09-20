@@ -20,8 +20,6 @@ A cute browser life simulation for a household of cats: build their home, follow
 
 Full building and decorating; eight cats including kittens; real and fictional cat creation/adoption; autonomy and player direction; careers, hobbies and businesses; earned money/unlocks with optional free-build; one lively neighborhood; fixed aging between normal and slow; death, memorials and occasional ghosts. Moo-Moo requires mutual love and readiness and only has a chance of kittens. At capacity it still works without new pregnancy. Closed games are paused. Every core action works on phone and computer.
 
-## Planning validation
-
 ## Live trackers
 
 - [Complete specification and build roadmap](https://github.com/russellcainiv/cats/issues/1)

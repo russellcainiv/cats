@@ -1,30 +1,28 @@
 # Cats planning and setup progress
 
-## Source and scope
+## Scope
 
-Source: this conversation's completed design interview and approved A + B artwork. Latest request: fully spec and ticket the game for a local model, create a public GitHub repository, and synchronize tracking with Linear. This lane produces planning/setup artifacts, not game implementation.
+Source: completed design interview and approved A + B GPT Image concept. Deliver a complete, model-neutral spec and execution plan, public repository, published tickets and native Linear sync. Game implementation is the next executor's work.
 
-## Custody
+## Custody and delivery
 
-Workspace: Cats. Initial branch: main; no remote was configured. Preserve all authored interview and art files. No gameplay code exists yet.
+Public repository: https://github.com/russellcainiv/cats. Planning branch: codex/cats-planning-setup, based on the initial main commit 2a5a9088252699d161abe0283cac863956608e62. First published plan commit: ab8dff3. The setup PR carries final verification and is merged after its checks pass.
 
-## Verified work
+## Verified evidence
 
-- The approved picture is copied to docs/art/approved-direction.png.
-- Confirmed requirements are recorded in docs/requirements.json.
-- Thirty-two implementation slices are recorded individually under .scratch/cats/issues and in docs/tickets.json. Completion status is not implied by ready-for-agent.
-- GATES.md defines planning and repository/issue/sync acceptance; evidence is still being gathered.
+- 25 confirmed decisions preserved; 72 user stories; 32 implementation tasks and 87 acyclic prerequisite edges.
+- Exact approved picture versioned and embedded in the spec and handoff.
+- Independent review: PASS for planning readiness in docs/reviews/plan-review.md; all material findings resolved.
+- Planning validator and six malformed-manifest self-tests pass locally and in GitHub Actions.
+- Public issue set: 37 open issues with matching bodies and labels, 35 native sub-issue links and 87 prerequisite links; docs/tracker-map.json contains actual identities.
+- Linear project: Scope 37, Completed 0. All imported issues assigned to Cats Browser Game. A title change went Linear → GitHub and its restoration went GitHub → Linear, verified at both destinations.
+- Genuine GitHub Actions screenshot docs/evidence/planning-checks.png was viewed: correct Cats repository, successful workflow and validate job, no unrelated window. It shows the first published planning check; final checks remain available on the PR.
+- No game implementation, runtime tests, backend provisioning or deployment is claimed.
 
-## Current lanes
+## Remaining product work
 
-- Main: execution plan, ticket dependencies, validation and GitHub publication.
-- Specification lane: full user stories, architecture contracts and proposed technical defaults.
-- Linear setup lane: authenticated access, project and GitHub synchronization discovery.
+Execute all 32 tickets and their original acceptance criteria. Three human validation tickets remain open for recipient personalization, fixed-pace balance and playable phone composition. They do not require repeating the accepted product interview.
 
-## Remaining gates
+## Next executable action
 
-Finish the spec and execution plan; independently review them; verify requirement coverage and DAG; publish repository and issues; configure and prove Linear sync. Game implementation, game tests and deployment are future execution work.
-
-## Next action
-
-Complete the model handoff and runnable planning validator while the specification and Linear setup lanes advance.
+Read START-HERE.md, claim GitHub #2 / CATS-2, and implement the first private create/save/resume household slice. Verify actual service APIs and provisioning before writing integration code.

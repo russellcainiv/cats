@@ -88,12 +88,17 @@ def verify():
         labels={l['name'] for l in issue['labels']}
         assert set(item['labels']) <= labels, ('labels', item['key'])
         assert issue['state']=='open', ('premature closure',item['key'])
+        assert issue['body'].strip() == (ROOT/item['body']).read_text().strip(), ('body drift',item['key'])
+    for parent_key,children in [('spec',[f'task-{t["id"]:02d}' for t in data]),('map',['01-recipient','02-balance','03-phone-art'])]:
+        observed={i['id'] for i in api(f'repos/{REPO}/issues/{mapping[parent_key]["number"]}/sub_issues?per_page=100')}
+        expected={mapping[key]['id'] for key in children}
+        assert observed == expected, ('children',parent_key,observed,expected)
     for t in data:
         issue=mapping[f'task-{t["id"]:02d}']
         observed={i['id'] for i in api(f'repos/{REPO}/issues/{issue["number"]}/dependencies/blocked_by?per_page=100')}
         expected={mapping[f'task-{n:02d}']['id'] for n in t['depends']}
         assert observed == expected, ('dependencies',t['id'],observed,expected)
-    print(f'PASS GitHub: {len(specs())} open issues; all labels; {sum(len(t["depends"]) for t in data)} native dependency edges')
+    print(f'PASS GitHub: {len(specs())} open issues; exact bodies; all labels; 35 sub-issue links; {sum(len(t["depends"]) for t in data)} native dependency edges')
 
 if __name__=='__main__':
     mode=sys.argv[1]

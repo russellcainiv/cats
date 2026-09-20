@@ -4,7 +4,7 @@ Read README.md, the full spec, approved picture, architecture, contracts and tic
 
 ## Assignment
 
-Implement the whole agreed browser cat life simulation, in dependency-ready vertical slices, with real interactions, persistence and mobile/desktop parity. Do not stop at a static illustration, a prototype, an unfinished UI or a PR. All confirmed requirements live in docs/requirements.json; all build tasks live in docs/tickets.json and one Markdown file each under .scratch/cats/issues. GitHub/Linear identities are recorded in docs/tracker-map.json after publication.
+Implement the whole agreed browser cat life simulation, in dependency-ready vertical slices, with real interactions, persistence and mobile/desktop parity. Do not stop at a static illustration, a prototype, an unfinished UI or a PR. All confirmed requirements live in docs/requirements.json; all build tasks live in docs/tickets.json and one Markdown file each under .scratch/cats/issues. Published GitHub identities are recorded in docs/tracker-map.json; Linear synchronization evidence is in docs/linear-setup.md.
 
 ## Read in order
 
