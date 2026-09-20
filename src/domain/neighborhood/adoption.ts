@@ -13,26 +13,67 @@ import {
 
 /**
  * Calculates current total capacity used by living cats and reserved litter slots.
+ * Canonical engine schema uses `reservedSlots` on PregnancyRecord.
  */
 export function getHouseholdCapacityUsed(state: WorldState): {
   livingCount: number;
+  reservedSlots: number;
   reservedLitterSlots: number;
   totalUsed: number;
 } {
   const livingCount = state.livingCatIds.length;
-  let reservedLitterSlots = 0;
+  let reservedSlots = 0;
 
   if (state.lifecycle && state.lifecycle.pregnancies) {
-    for (const pregId of Object.keys(state.lifecycle.pregnancies)) {
-      reservedLitterSlots += state.lifecycle.pregnancies[pregId].reservedLitterSlots;
+    for (const preg of Object.values(state.lifecycle.pregnancies)) {
+      if (!preg) continue;
+      const slots = preg.reservedSlots ?? (preg as any).reservedLitterSlots ?? 0;
+      reservedSlots += Number.isFinite(slots) ? Math.max(0, slots) : 0;
     }
   }
 
   return {
     livingCount,
-    reservedLitterSlots,
-    totalUsed: livingCount + reservedLitterSlots,
+    reservedSlots,
+    reservedLitterSlots: reservedSlots,
+    totalUsed: livingCount + reservedSlots,
   };
+}
+
+/**
+ * Checks whether a cat is actively pregnant using authoritative state records and cat.pregnancyId.
+ */
+export function isCatActivelyPregnant(state: WorldState, catId: CatId, cat: CatRecord): boolean {
+  // 1. Authoritative pregnancy records in state.lifecycle.pregnancies
+  if (state.lifecycle && state.lifecycle.pregnancies) {
+    for (const [pregId, preg] of Object.entries(state.lifecycle.pregnancies)) {
+      if (!preg) continue;
+      // Direct pregnancy ID match
+      if (cat.pregnancyId && (cat.pregnancyId === pregId || preg.id === cat.pregnancyId || (preg as any).pregnancyId === cat.pregnancyId)) {
+        return true;
+      }
+      // Canonical PregnancyRecord: parentIds is [gestatingCatId, otherParentId]
+      if (Array.isArray(preg.parentIds) && preg.parentIds.length > 0 && preg.parentIds[0] === catId) {
+        return true;
+      }
+      // Legacy pregnancy motherId
+      if ((preg as any).motherId === catId) {
+        return true;
+      }
+    }
+  }
+
+  // 2. Direct pregnancyId on CatRecord
+  if (cat.pregnancyId && typeof cat.pregnancyId === 'string' && cat.pregnancyId.trim().length > 0) {
+    return true;
+  }
+
+  // 3. Legacy boolean flag fallback
+  if (cat.isPregnant === true) {
+    return true;
+  }
+
+  return false;
 }
 
 /**
@@ -51,7 +92,39 @@ export function adoptCat(
   },
   context: CommandContext
 ): CommandResult {
-  const { totalUsed, livingCount } = getHouseholdCapacityUsed(state);
+  if (!payload || typeof payload !== 'object') {
+    return {
+      ok: false,
+      state,
+      error: { code: 'INVALID_PAYLOAD', message: 'Adoption payload is required.' },
+    };
+  }
+
+  if (!payload.name || typeof payload.name !== 'string' || !payload.name.trim()) {
+    return {
+      ok: false,
+      state,
+      error: { code: 'INVALID_NAME', message: 'Cat name must be a non-empty string.' },
+    };
+  }
+
+  if (!payload.appearance || typeof payload.appearance !== 'object') {
+    return {
+      ok: false,
+      state,
+      error: { code: 'INVALID_APPEARANCE', message: 'Cat appearance must be provided.' },
+    };
+  }
+
+  if (!Array.isArray(payload.traits)) {
+    return {
+      ok: false,
+      state,
+      error: { code: 'INVALID_TRAITS', message: 'Cat traits must be an array.' },
+    };
+  }
+
+  const { totalUsed, livingCount, reservedSlots } = getHouseholdCapacityUsed(state);
 
   if (totalUsed >= 8) {
     return {
@@ -59,7 +132,7 @@ export function adoptCat(
       state,
       error: {
         code: 'HOUSEHOLD_FULL',
-        message: `Household capacity limit reached (8 max, including ${state.livingCatIds.length} living cats and reserved litter slots).`,
+        message: `Household capacity limit reached (8 max, including ${state.livingCatIds.length} living cats and ${reservedSlots} reserved litter slots).`,
       },
     };
   }
@@ -68,6 +141,14 @@ export function adoptCat(
   let remainingCandidates = state.neighborhood.adoptionCandidates;
 
   if (payload.candidateId) {
+    if (typeof payload.candidateId !== 'string' || !payload.candidateId.trim()) {
+      return {
+        ok: false,
+        state,
+        error: { code: 'INVALID_CANDIDATE_ID', message: 'Candidate ID must be a non-empty string.' },
+      };
+    }
+
     const candidate = state.neighborhood.adoptionCandidates.find(
       c => c.candidateId === payload.candidateId
     );
@@ -81,13 +162,13 @@ export function adoptCat(
         },
       };
     }
-    adoptionFee = candidate.adoptionFee;
+    adoptionFee = Number.isFinite(candidate.adoptionFee) && candidate.adoptionFee > 0 ? candidate.adoptionFee : 0;
     remainingCandidates = state.neighborhood.adoptionCandidates.filter(
       c => c.candidateId !== payload.candidateId
     );
   }
 
-  if (adoptionFee > 0 && state.economy.wallet.earnedCash < adoptionFee) {
+  if (adoptionFee > 0 && (typeof state.economy.wallet.earnedCash !== 'number' || state.economy.wallet.earnedCash < adoptionFee)) {
     return {
       ok: false,
       state,
@@ -98,14 +179,30 @@ export function adoptCat(
     };
   }
 
-  // Generate deterministic unique cat ID using simMinute and sequence counter
-  const newCatId = `cat_adopted_${state.clock.simMinute}_${state.nextEventSequence}`;
+  // Generate deterministic unique cat ID avoiding any collisions
+  let newCatId = payload.candidateId
+    ? `cat_${payload.candidateId}`
+    : `cat_adopted_${state.clock.simMinute}_${state.nextEventSequence}`;
+
+  let disambiguation = 0;
+  while (
+    state.cats[newCatId] ||
+    state.livingCatIds.includes(newCatId) ||
+    (state.neighborhood.npcCats && state.neighborhood.npcCats[newCatId])
+  ) {
+    disambiguation++;
+    newCatId = `cat_adopted_${state.clock.simMinute}_${state.nextEventSequence}_${disambiguation}`;
+  }
 
   const newCat: CatRecord = {
     id: newCatId,
-    name: payload.name,
-    appearance: payload.appearance,
-    traits: payload.traits,
+    householdId: state.householdId,
+    name: payload.name.trim(),
+    appearance: { ...payload.appearance },
+    baseAppearance: { ...payload.appearance },
+    careerOutfit: null,
+    isAtWork: false,
+    traits: [...payload.traits],
     lifeStage: 'adult',
     ageDays: 30,
     ageMinutes: 30 * 1440,
@@ -120,9 +217,11 @@ export function adoptCat(
     relationships: {},
     isNpc: false,
     homeLotId: 'lot_home',
+    isPregnant: false,
+    createdAtSimMinute: state.clock.simMinute,
   };
 
-  // Deduct fee from wallet if applicable
+  // Deduct fee from wallet exactly once if applicable
   const updatedWallet = {
     ...state.economy.wallet,
     earnedCash: Math.max(0, state.economy.wallet.earnedCash - adoptionFee),
@@ -136,7 +235,7 @@ export function adoptCat(
     actorIds: [newCatId],
     payload: {
       catId: newCatId,
-      name: payload.name,
+      name: payload.name.trim(),
       adoptionFee,
       wasHouseholdEmpty: livingCount === 0,
     },
@@ -167,8 +266,9 @@ export function adoptCat(
 
 /**
  * Transfers an eligible adult household cat to a neighborhood NPC home lot without deletion.
- * Preserves the cat's stable ID, traits, relationships, and history.
- * Blocks transfer of kittens/adolescents, pregnant cats, deceased/ghost cats, and last remaining cat if unconfirmed.
+ * Preserves the cat's stable ID, traits, relationships, ancestry, and career appearance.
+ * Blocks transfer of kittens/adolescents, pregnant cats, deceased/ghost cats, invalid IDs,
+ * wrong owner, and non-NPC residential destination lots.
  */
 export function transferCatToNeighborhood(
   state: WorldState,
@@ -176,6 +276,17 @@ export function transferCatToNeighborhood(
   targetLotId: LotId,
   context: CommandContext
 ): CommandResult {
+  if (!catId || typeof catId !== 'string' || !catId.trim()) {
+    return {
+      ok: false,
+      state,
+      error: {
+        code: 'INVALID_CAT_ID',
+        message: 'Cat ID must be a non-empty string.',
+      },
+    };
+  }
+
   if (!state.livingCatIds.includes(catId)) {
     return {
       ok: false,
@@ -196,7 +307,52 @@ export function transferCatToNeighborhood(
     };
   }
 
-  // Safety checks
+  if (cat.lifeStatus !== 'living') {
+    return {
+      ok: false,
+      state,
+      error: {
+        code: 'CAT_NOT_IN_HOUSEHOLD',
+        message: `Cat ${catId} has status ${cat.lifeStatus}. Deceased or ghost cats cannot be transferred.`,
+      },
+    };
+  }
+
+  if (cat.householdId && state.householdId && cat.householdId !== state.householdId) {
+    return {
+      ok: false,
+      state,
+      error: {
+        code: 'CAT_NOT_IN_HOUSEHOLD',
+        message: `Cat ${catId} belongs to household ${cat.householdId}, not active household ${state.householdId}.`,
+      },
+    };
+  }
+
+  if (cat.isNpc === true) {
+    return {
+      ok: false,
+      state,
+      error: {
+        code: 'CAT_NOT_IN_HOUSEHOLD',
+        message: `Cat ${catId} is already a neighborhood NPC.`,
+      },
+    };
+  }
+
+  // Reject double ID collision if catId already exists as an NPC
+  if (state.neighborhood.npcCats && state.neighborhood.npcCats[catId]) {
+    return {
+      ok: false,
+      state,
+      error: {
+        code: 'DUPLICATE_CAT_ID',
+        message: `Cat ID ${catId} already exists in neighborhood NPC records.`,
+      },
+    };
+  }
+
+  // Safety check: kittens and adolescents cannot transfer independently
   if (cat.lifeStage === 'kitten' || cat.lifeStage === 'adolescent') {
     return {
       ok: false,
@@ -208,13 +364,26 @@ export function transferCatToNeighborhood(
     };
   }
 
-  if (cat.isPregnant) {
+  // Safety check: active pregnancy blocks transfer until birth
+  if (isCatActivelyPregnant(state, catId, cat)) {
     return {
       ok: false,
       state,
       error: {
         code: 'PREGNANT_TRANSFER_DEFERRED',
         message: `Pregnant cat ${cat.name} cannot move out until after giving birth.`,
+      },
+    };
+  }
+
+  // Validate destination lot
+  if (!targetLotId || typeof targetLotId !== 'string' || !targetLotId.trim()) {
+    return {
+      ok: false,
+      state,
+      error: {
+        code: 'INVALID_TRANSFER_DESTINATION',
+        message: 'Target lot ID must be a non-empty string.',
       },
     };
   }
@@ -231,14 +400,41 @@ export function transferCatToNeighborhood(
     };
   }
 
+  if (targetLotId === 'lot_home' || targetLotId === cat.homeLotId || targetLotId === cat.position?.lotId) {
+    return {
+      ok: false,
+      state,
+      error: {
+        code: 'INVALID_TRANSFER_DESTINATION',
+        message: `Cannot transfer cat ${cat.name} to its current lot ${targetLotId}. Destination must be a different NPC home.`,
+      },
+    };
+  }
+
   // 1. Remove from living household cat IDs and household cats record
   const newLivingCatIds = state.livingCatIds.filter(id => id !== catId);
   const newHouseholdCats = { ...state.cats };
   delete newHouseholdCats[catId];
 
-  // 2. Prepare converted NPC record maintaining ALL attributes & stable ID
+  // 2. Prepare converted NPC record maintaining ALL attributes, ancestry, relationships, and career appearance
   const transferredNpcCat: CatRecord = {
     ...cat,
+    householdId: undefined,
+    appearance: { ...cat.appearance },
+    baseAppearance: cat.baseAppearance ? { ...cat.baseAppearance } : { ...cat.appearance },
+    careerOutfit: cat.careerOutfit ? { ...cat.careerOutfit } : null,
+    isAtWork: false,
+    traits: [...cat.traits],
+    skills: { ...cat.skills },
+    relationships: { ...cat.relationships },
+    motherId: cat.motherId,
+    fatherId: cat.fatherId,
+    familyTree: cat.familyTree ? {
+      motherId: cat.familyTree.motherId ?? cat.motherId,
+      fatherId: cat.familyTree.fatherId ?? cat.fatherId,
+      partnerId: cat.familyTree.partnerId,
+      offspringIds: cat.familyTree.offspringIds ? [...cat.familyTree.offspringIds] : undefined,
+    } : (cat.motherId || cat.fatherId ? { motherId: cat.motherId, fatherId: cat.fatherId } : undefined),
     isNpc: true,
     homeLotId: targetLotId,
     position: {
@@ -247,6 +443,7 @@ export function transferCatToNeighborhood(
       y: 5,
     },
     currentAction: null,
+    lastRoute: [],
   };
 
   // 3. Track transfer history record

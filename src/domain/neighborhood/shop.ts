@@ -16,11 +16,24 @@ export function buyShopItem(
   quantity: number,
   context: CommandContext
 ): CommandResult {
-  if (quantity <= 0) {
+  if (
+    typeof quantity !== 'number' ||
+    !Number.isFinite(quantity) ||
+    !Number.isInteger(quantity) ||
+    quantity <= 0
+  ) {
     return {
       ok: false,
       state,
-      error: { code: 'INVALID_QUANTITY', message: 'Quantity must be positive.' },
+      error: { code: 'INVALID_QUANTITY', message: 'Quantity must be a positive integer.' },
+    };
+  }
+
+  if (!catalogId || typeof catalogId !== 'string' || !catalogId.trim()) {
+    return {
+      ok: false,
+      state,
+      error: { code: 'INVALID_CATALOG_ID', message: 'Catalog ID must be a non-empty string.' },
     };
   }
 

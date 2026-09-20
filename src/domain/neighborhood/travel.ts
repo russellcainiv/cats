@@ -20,6 +20,22 @@ export function startTravel(
   context: CommandContext,
   isReturn = false
 ): CommandResult {
+  if (!catId || typeof catId !== 'string' || !catId.trim()) {
+    return {
+      ok: false,
+      state,
+      error: { code: 'INVALID_CAT_ID', message: 'Cat ID must be a non-empty string.' },
+    };
+  }
+
+  if (!targetLotId || typeof targetLotId !== 'string' || !targetLotId.trim()) {
+    return {
+      ok: false,
+      state,
+      error: { code: 'INVALID_LOT', message: 'Destination lot ID must be a non-empty string.' },
+    };
+  }
+
   // 1. Locate the cat (household or NPC)
   const isHouseholdCat = state.livingCatIds.includes(catId);
   const cat = isHouseholdCat
@@ -184,6 +200,14 @@ export function cancelTravel(
   catId: CatId,
   context: CommandContext
 ): CommandResult {
+  if (!catId || typeof catId !== 'string' || !catId.trim()) {
+    return {
+      ok: false,
+      state,
+      error: { code: 'INVALID_CAT_ID', message: 'Cat ID must be a non-empty string.' },
+    };
+  }
+
   const journey = state.neighborhood.activeTravels[catId];
   if (!journey) {
     return {

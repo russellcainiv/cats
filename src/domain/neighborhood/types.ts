@@ -8,11 +8,22 @@ export type GoalId = string;
 export type EventId = string;
 
 export interface CatAppearance {
-  bodyColor: string;
-  pattern?: string;
-  eyeColor: string;
+  breed?: string;
+  primaryColor?: string;
+  secondaryColor?: string;
+  pattern?: 'solid' | 'tabby' | 'bicolor' | 'calico' | 'tortoiseshell' | 'pointed' | string;
+  eyeColor: 'green' | 'amber' | 'blue' | 'copper' | 'heterochromia' | string;
+  bodyType?: 'petite' | 'average' | 'stocky' | 'fluffy' | string;
   collarColor?: string;
+  accessoryId?: string;
+  bodyColor?: string;
   accessory?: string;
+}
+
+export interface CareerOutfit {
+  outfitId: string;
+  careerId: string;
+  rank: number;
 }
 
 export type PersonalityTrait =
@@ -23,7 +34,12 @@ export type PersonalityTrait =
   | 'skittish'
   | 'greedy'
   | 'adventurous'
-  | 'affectionate';
+  | 'affectionate'
+  | 'aloof'
+  | 'glutton'
+  | 'vocal'
+  | 'mischievous'
+  | 'zen';
 
 export type LifeStage = 'kitten' | 'adolescent' | 'adult' | 'elder';
 export type LifeStatus = 'living' | 'deceased' | 'ghost';
@@ -75,21 +91,25 @@ export interface NpcScheduleItem {
 
 export interface CatRecord {
   id: CatId;
+  householdId?: HouseholdId;
   name: string;
   appearance: CatAppearance;
+  baseAppearance?: CatAppearance;
+  careerOutfit?: CareerOutfit | null;
+  isAtWork?: boolean;
   traits: PersonalityTrait[];
   lifeStage: LifeStage;
-  ageDays: number;
+  ageDays?: number;
   ageMinutes: number;
   lifeStatus: LifeStatus;
   needs: CatNeeds;
   moodScore: number;
   moodBand: MoodBand;
-  skills: CatSkills;
+  skills: CatSkills | any;
   position: CatPosition;
   currentAction: ActionQueueItem | null;
   lastRoute: GridCell[];
-  relationships: Record<CatId, { friendship: number; romance: number; isLove: boolean }>;
+  relationships: Record<CatId, { friendship: number; romance: number; isLove: boolean } | any>;
   isNpc: boolean;
   npcSchedule?: NpcScheduleItem[];
   homeLotId: LotId;
@@ -99,7 +119,11 @@ export interface CatRecord {
     partnerId?: CatId;
     offspringIds?: CatId[];
   };
+  motherId?: CatId;
+  fatherId?: CatId;
+  pregnancyId?: PregnancyId;
   isPregnant?: boolean;
+  createdAtSimMinute?: number;
 }
 
 export interface TravelJourney {
@@ -259,12 +283,18 @@ export interface GhostProjection {
 }
 
 export interface PregnancyRecord {
-  pregnancyId: PregnancyId;
-  motherId: CatId;
-  fatherId: CatId;
-  conceptionSimMinute: number;
-  dueSimMinute: number;
-  reservedLitterSlots: number;
+  id?: PregnancyId;
+  pregnancyId?: PregnancyId;
+  parentIds?: [CatId, CatId];
+  motherId?: CatId;
+  fatherId?: CatId;
+  startedAtSimMinute?: number;
+  conceptionSimMinute?: number;
+  dueAtSimMinute?: number;
+  dueSimMinute?: number;
+  reservedSlots?: number;
+  reservedLitterSlots?: number;
+  conceptionEventId?: string;
 }
 
 export interface WorldState {
