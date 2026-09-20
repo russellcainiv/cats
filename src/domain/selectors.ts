@@ -13,6 +13,7 @@ import {
   CatRecord,
   CatSkills,
   CareerOutfit,
+  CareerRecord,
   DoorItem,
   GhostProjection,
   GoalRecord,
@@ -25,6 +26,7 @@ import {
   MemorialRecord,
   MoodBand,
   PersonalityTrait,
+  PregnancyId,
   SIM_MINUTES_PER_DAY,
   WallSegment,
   Wallet,
@@ -51,6 +53,9 @@ export interface CatView {
   currentAction: ActionQueueItem | null;
   lastRoute: GridCell[];
   relationships: Record<CatId, { friendship: number; romance: number; isLove: boolean }>;
+  motherId?: CatId;
+  fatherId?: CatId;
+  pregnancyId?: PregnancyId;
 }
 
 export interface LotView {
@@ -97,6 +102,7 @@ export interface GameView {
   currentLot: LotView;
   wallet: Wallet;
   inventory: InventoryItem[];
+  careers: CareerRecord[];
   goals: GoalRecord[];
   memorials: MemorialRecord[];
   ghosts: GhostProjection[];
@@ -133,6 +139,9 @@ function projectCatView(cat: CatRecord): CatView {
     currentAction: cat.currentAction ? { ...cat.currentAction } : null,
     lastRoute: [...cat.lastRoute],
     relationships: rels,
+    motherId: cat.motherId,
+    fatherId: cat.fatherId,
+    pregnancyId: cat.pregnancyId,
   };
 }
 
@@ -241,6 +250,7 @@ export function selectView(state: WorldState): GameView {
     currentLot,
     wallet: { ...state.economy.wallet },
     inventory: Object.values(state.economy.inventory),
+    careers: Object.values(state.economy?.careers || {}),
     goals: Object.values(state.economy.goals),
     memorials: Object.values(state.lifecycle.memorials),
     ghosts: [...state.lifecycle.ghosts],

@@ -168,6 +168,7 @@ export interface MemorialRecord {
   id: MemorialId;
   deceasedCatId: CatId;
   name: string;
+  catName?: string;
   appearance: CatAppearance;
   traits: PersonalityTrait[];
   ageAtDeathMinutes: number;
@@ -249,6 +250,7 @@ export interface CareerRecord {
   workDays: number[];
   performance: number;
   isAtWork?: boolean;
+  hourlyWage?: number;
 }
 
 export interface CafeBusiness {

@@ -413,7 +413,7 @@ describe('Round 1 Core Repair Regressions', () => {
     // Unsupported neighborhood command
     const resNeigh = dispatch(
       world,
-      { type: 'TRAVEL_TO_LOT', payload: { catId: 'cat_mochi', targetLotId: 'park' } },
+      { type: 'UNSUPPORTED_NEIGHBORHOOD_ACTION' as any, payload: { catId: 'cat_mochi' } },
       { actorId: 'player', commandId: 'cmd_unsupported_neigh' }
     );
     expect(resNeigh.ok).toBe(false);
@@ -424,7 +424,7 @@ describe('Round 1 Core Repair Regressions', () => {
     // Unsupported economy command
     const resEcon = dispatch(
       world,
-      { type: 'SELL_ITEM', payload: { itemId: 'inv_item_01', quantity: 1 } },
+      { type: 'UNSUPPORTED_ECONOMY_ACTION' as any, payload: { itemId: 'inv_item_01' } },
       { actorId: 'player', commandId: 'cmd_unsupported_econ' }
     );
     expect(resEcon.ok).toBe(false);

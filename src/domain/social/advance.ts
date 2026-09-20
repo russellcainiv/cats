@@ -17,7 +17,7 @@ import {
 import { nextRandomFloat } from './rng';
 
 export function advanceSocial(state: WorldState, elapsedSimMinutes: number): WorldState {
-  if (elapsedSimMinutes <= 0 || state.clock.isPaused) {
+  if (elapsedSimMinutes <= 0 || state.clock.isPaused || !state.social) {
     return state;
   }
 
@@ -28,11 +28,11 @@ export function advanceSocial(state: WorldState, elapsedSimMinutes: number): Wor
   let nextEventSequence = state.nextEventSequence;
   let nextCats = { ...state.cats };
   let nextSocial = { ...state.social };
-  let nextPregnancies = { ...state.lifecycle.pregnancies };
+  let nextPregnancies = { ...(state.lifecycle?.pregnancies || {}) };
 
   const remainingActions: InProgressSocialAction[] = [];
 
-  for (const action of state.social.inProgressActions) {
+  for (const action of (state.social.inProgressActions || [])) {
     const initiator = nextCats[action.initiatorId];
     const target = nextCats[action.targetId];
 
@@ -166,9 +166,8 @@ export function advanceSocial(state: WorldState, elapsedSimMinutes: number): Wor
       let pregnancyConceived = false;
       let pregnancyRecord: PregnancyRecord | null = null;
 
-      if (availableSlots <= 0) {
-        // At capacity limit (8 living + reserved)!
-        // Romance action completes, BUT EXACTLY ZERO conception draws are made!
+      if (availableSlots <= 0 || nextCats[action.targetId]?.isPregnant || nextCats[action.targetId]?.pregnancyId) {
+        // At capacity limit or dam is already pregnant: zero conception draws
       } else {
         // Available capacity exists! Make exactly ONE 25% conception draw.
         const drawResult = nextRandomFloat(currentRng, 'moo_moo_conception', currentSimMinute);

@@ -55,7 +55,8 @@ export function appendReceipt(
   receipt: CommandReceipt,
   maxReceipts: number = MAX_RECEIPTS_LOG_SIZE
 ): CommandReceipt[] {
-  const updated = [...receipts, receipt];
+  const filtered = receipts.filter((r) => r.commandId !== receipt.commandId);
+  const updated = [...filtered, receipt];
   if (updated.length > maxReceipts) {
     return updated.slice(updated.length - maxReceipts);
   }

@@ -160,6 +160,7 @@ export interface MemorialRecord {
   id: MemorialId;
   deceasedCatId: CatId;
   catName: string;
+  name?: string;
   appearance: CatAppearance;
   traits: PersonalityTrait[];
   ageAtDeathMinutes: number;

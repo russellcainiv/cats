@@ -12,9 +12,14 @@ import { advanceCatAge, createCatRecord } from './core/cat';
 import { createDomainEvent } from './core/events';
 import { advanceRouteProgress, cellKey, findPath } from './core/navigation';
 import { advanceNeeds } from './core/needs';
-import { advanceEconomy } from './core/subsystems';
-import { assertInvariants } from './invariants';
+import {
+  advanceBuilding,
+  advanceSocial,
+  advanceEconomy,
+  advanceNeighborhood,
+} from './core/subsystems';
 import { SeededRng } from './rng';
+import { assertInvariants } from './invariants';
 import {
   calculateAvailableCapacity,
   CatRecord,
@@ -518,7 +523,10 @@ export function stepSingleMinute(state: WorldState): WorldState {
     nextEventSequence: nextSeq,
   };
 
+  intermediateState = advanceBuilding(intermediateState, 1);
+  intermediateState = advanceSocial(intermediateState, 1);
   intermediateState = advanceEconomy(intermediateState, 1);
+  intermediateState = advanceNeighborhood(intermediateState, 1);
   nextSeq = intermediateState.nextEventSequence;
 
   // -------------------------------------------------------------------------

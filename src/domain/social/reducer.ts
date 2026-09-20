@@ -18,6 +18,7 @@ import {
   applyTraitModifiers,
   addMemory
 } from './relationships';
+import { nextRandomFloat } from './rng';
 
 export function isSocialCommand(cmd: unknown): cmd is SocialCommand {
   if (!cmd || typeof cmd !== 'object') return false;
@@ -46,8 +47,17 @@ export function reduceSocial(
   command: SocialCommand,
   context: CommandContext
 ): CommandResult {
+  const currentSocial = {
+    ...initializeSocialState(),
+    ...(state.social || {}),
+  };
+  const safeState: WorldState = {
+    ...state,
+    social: currentSocial,
+  };
+
   // Check command idempotency
-  if (state.social.completedActionIds.includes(context.commandId)) {
+  if (currentSocial.completedActionIds?.includes(context.commandId)) {
     return { ok: true, state, events: [] };
   }
 
@@ -61,51 +71,196 @@ export function reduceSocial(
           ? 'player'
           : command.payload.source || 'autonomous';
 
-      const eligibility = checkMooMooEligibility(state, initiatorId, partnerId);
+      const eligibility = checkMooMooEligibility(safeState, initiatorId, partnerId);
 
       if (!eligibility.eligible) {
         // Declined! Decline MUST consume 0 RNG rolls.
         const pKey = pairKey(initiatorId, partnerId);
         const cooldownMinutes = 30; // 30 sim minutes cooldown on decline
         const nextCooldowns = {
-          ...state.social.pairCooldowns,
-          [pKey]: state.clock.simMinute + cooldownMinutes
+          ...currentSocial.pairCooldowns,
+          [pKey]: safeState.clock.simMinute + cooldownMinutes,
         };
 
         const declinedEvent: DomainEvent = {
-          id: `evt_${state.nextEventSequence}`,
+          id: `evt_${safeState.nextEventSequence}`,
           type: 'MOO_MOO_DECLINED',
-          sequence: state.nextEventSequence,
-          simTime: state.clock.simMinute,
+          sequence: safeState.nextEventSequence,
+          simTime: safeState.clock.simMinute,
           actorIds: [initiatorId, partnerId],
           payload: {
             initiatorId,
             partnerId,
             source,
-            reason: eligibility.reason || 'Partner declined'
-          }
+            reason: eligibility.reason || 'Partner declined',
+          },
         };
 
         const nextState: WorldState = {
-          ...state,
+          ...safeState,
           social: {
-            ...state.social,
+            ...currentSocial,
             pairCooldowns: nextCooldowns,
-            completedActionIds: [...state.social.completedActionIds, context.commandId]
+            completedActionIds: [...(currentSocial.completedActionIds || []), context.commandId],
           },
-          events: [...state.events, declinedEvent],
-          nextEventSequence: state.nextEventSequence + 1
+          events: [...safeState.events, declinedEvent],
+          nextEventSequence: safeState.nextEventSequence + 1,
         };
 
         return {
           ok: false,
           state: nextState,
-          error: { code: 'MOO_MOO_DECLINED', message: eligibility.reason || 'Moo-Moo declined' }
+          error: { code: 'MOO_MOO_DECLINED', message: eligibility.reason || 'Moo-Moo declined' },
         };
       }
 
-      // Eligible! Initiate Moo-Moo in-progress action.
-      const actionId = `act_moo_${context.commandId}_${state.clock.simMinute}`;
+      if (command.type === 'SUGGEST_MOO_MOO') {
+        // Direct SUGGEST_MOO_MOO executes immediately
+        const initiatorCat = safeState.cats[initiatorId];
+        const partnerCat = safeState.cats[partnerId];
+        let currentRng = safeState.rng;
+        let nextSeq = safeState.nextEventSequence;
+        const events: DomainEvent[] = [];
+
+        // Fulfill needs & update relationships identically to autonomous Moo-Moo
+        const c1 = {
+          ...initiatorCat,
+          needs: {
+            ...initiatorCat.needs,
+            social: 100,
+            comfort: Math.min(100, (initiatorCat.needs.comfort ?? 50) + 20),
+            energy: Math.max(0, initiatorCat.needs.energy - 15),
+          },
+          relationships: {
+            ...initiatorCat.relationships,
+            [partnerId]: {
+              ...initiatorCat.relationships?.[partnerId],
+              lastInteractionMinute: safeState.clock.simMinute,
+            },
+          },
+        };
+
+        const c2 = {
+          ...partnerCat,
+          needs: {
+            ...partnerCat.needs,
+            social: 100,
+            comfort: Math.min(100, (partnerCat.needs.comfort ?? 50) + 20),
+            energy: Math.max(0, partnerCat.needs.energy - 15),
+          },
+          relationships: {
+            ...partnerCat.relationships,
+            [initiatorId]: {
+              ...partnerCat.relationships?.[initiatorId],
+              lastInteractionMinute: safeState.clock.simMinute,
+            },
+          },
+        };
+
+        const completeEvt: DomainEvent = {
+          id: `evt_${nextSeq++}`,
+          type: 'MOO_MOO_COMPLETED',
+          sequence: nextSeq,
+          simTime: safeState.clock.simMinute,
+          actorIds: [initiatorId, partnerId],
+          payload: { initiatorId, partnerId, success: true },
+        };
+        events.push(completeEvt);
+
+        const livingCount = Object.values(safeState.cats).filter((c) => c.lifeStatus === 'living').length;
+        const reservedLitterSlots = Object.values((safeState.lifecycle as any)?.pregnancies || {})
+          .filter((p: any) => !p.resolved)
+          .reduce((sum: number, p: any) => sum + (p.reservedSlots ?? p.litterSize ?? 0), 0);
+        const availableCapacity = Math.max(0, 8 - (livingCount + reservedLitterSlots));
+
+        const nextPregnancies = { ...((safeState.lifecycle as any)?.pregnancies || {}) };
+
+        if (availableCapacity > 0) {
+          const drawResult = nextRandomFloat(currentRng, 'moo_moo_conception', safeState.clock.simMinute);
+          currentRng = drawResult.nextRng;
+
+          if (drawResult.value <= 0.25) {
+            const litterResult = nextRandomFloat(currentRng, 'moo_moo_litter_size', safeState.clock.simMinute);
+            currentRng = litterResult.nextRng;
+
+            const rawLitter = 1 + Math.floor(litterResult.value * 3);
+            const clampedLitter = Math.max(1, Math.min(rawLitter, availableCapacity));
+            const pregId = `preg_${partnerId}_${initiatorId}_${safeState.clock.simMinute}`;
+            const dueAt = safeState.clock.simMinute + 4320;
+
+            const pregnancyRecord: any = {
+              id: pregId,
+              parentIds: [partnerId, initiatorId],
+              startedAtSimMinute: safeState.clock.simMinute,
+              dueAtSimMinute: dueAt,
+              reservedSlots: clampedLitter,
+              conceptionEventId: completeEvt.id,
+              motherId: partnerId,
+              fatherId: initiatorId,
+            };
+            nextPregnancies[pregId] = pregnancyRecord;
+            c2.pregnancyId = pregId;
+
+            const pregEvent: DomainEvent = {
+              id: `evt_${nextSeq++}`,
+              type: 'PREGNANCY_STARTED',
+              sequence: nextSeq,
+              simTime: safeState.clock.simMinute,
+              actorIds: [partnerId, initiatorId],
+              payload: { pregnancyId: pregId, reservedSlots: clampedLitter, dueAtSimMinute: dueAt },
+            };
+            events.push(pregEvent);
+          }
+        } else {
+          const capacityEvt: DomainEvent = {
+            id: `evt_${nextSeq++}`,
+            type: 'MOO_MOO_AT_CAPACITY',
+            sequence: nextSeq,
+            simTime: safeState.clock.simMinute,
+            actorIds: [initiatorId, partnerId],
+            payload: { message: 'Household capacity reached. No kittens possible.' },
+          };
+          events.push(capacityEvt);
+        }
+
+        const actionId = `act_moo_${context.commandId || nextSeq}_${safeState.clock.simMinute}`;
+        const newAction: InProgressSocialAction = {
+          id: actionId,
+          type: 'moo_moo',
+          initiatorId,
+          targetId: partnerId,
+          startSimMinute: safeState.clock.simMinute,
+          totalDurationMinutes: 10,
+          elapsedMinutes: 0,
+          source: 'player',
+        };
+
+        const nextState: WorldState = {
+          ...safeState,
+          rng: currentRng,
+          cats: {
+            ...safeState.cats,
+            [initiatorId]: c1,
+            [partnerId]: c2,
+          },
+          social: {
+            ...currentSocial,
+            inProgressActions: [...(currentSocial.inProgressActions || []), newAction],
+            completedActionIds: [...(currentSocial.completedActionIds || []), context.commandId],
+          },
+          lifecycle: {
+            ...(safeState.lifecycle || {}),
+            pregnancies: nextPregnancies,
+          },
+          events: [...safeState.events, ...events],
+          nextEventSequence: nextSeq,
+        };
+
+        return { ok: true, state: nextState, events };
+      }
+
+      // Eligible PROPOSE_MOO_MOO! Initiate Moo-Moo in-progress action.
+      const actionId = `act_moo_${context.commandId}_${safeState.clock.simMinute}`;
       const actionDurationMinutes = 10; // 10 sim minutes duration
 
       const newAction: InProgressSocialAction = {
@@ -114,18 +269,18 @@ export function reduceSocial(
         interactionType: 'moo_moo',
         initiatorId,
         targetId: partnerId,
-        startSimMinute: state.clock.simMinute,
+        startSimMinute: safeState.clock.simMinute,
         totalDurationMinutes: actionDurationMinutes,
         elapsedMinutes: 0,
-        source
+        source,
       };
 
       // Set current action on both cats
-      const initiatorCat = state.cats[initiatorId];
-      const partnerCat = state.cats[partnerId];
+      const initiatorCat = safeState.cats[initiatorId];
+      const partnerCat = safeState.cats[partnerId];
 
       const updatedCats = {
-        ...state.cats,
+        ...safeState.cats,
         [initiatorId]: {
           ...initiatorCat,
           currentAction: {
@@ -135,8 +290,8 @@ export function reduceSocial(
             progressMinutes: 0,
             totalMinutes: actionDurationMinutes,
             interruptible: true,
-            source
-          }
+            source,
+          },
         },
         [partnerId]: {
           ...partnerCat,
@@ -147,36 +302,36 @@ export function reduceSocial(
             progressMinutes: 0,
             totalMinutes: actionDurationMinutes,
             interruptible: true,
-            source
-          }
-        }
+            source,
+          },
+        },
       };
 
       const startEvent: DomainEvent = {
-        id: `evt_${state.nextEventSequence}`,
+        id: `evt_${safeState.nextEventSequence}`,
         type: 'MOO_MOO_STARTED',
-        sequence: state.nextEventSequence,
-        simTime: state.clock.simMinute,
+        sequence: safeState.nextEventSequence,
+        simTime: safeState.clock.simMinute,
         actorIds: [initiatorId, partnerId],
         payload: {
           actionId,
           initiatorId,
           partnerId,
           durationMinutes: actionDurationMinutes,
-          source
-        }
+          source,
+        },
       };
 
       const nextState: WorldState = {
-        ...state,
+        ...safeState,
         cats: updatedCats,
         social: {
-          ...state.social,
-          inProgressActions: [...state.social.inProgressActions, newAction],
-          completedActionIds: [...state.social.completedActionIds, context.commandId]
+          ...currentSocial,
+          inProgressActions: [...currentSocial.inProgressActions, newAction],
+          completedActionIds: [...currentSocial.completedActionIds, context.commandId],
         },
-        events: [...state.events, startEvent],
-        nextEventSequence: state.nextEventSequence + 1
+        events: [...safeState.events, startEvent],
+        nextEventSequence: safeState.nextEventSequence + 1,
       };
 
       return { ok: true, state: nextState, events: [startEvent] };

@@ -15,6 +15,7 @@ import {
   EconomyStats
 } from './types';
 import { getRngFromWorld, syncRngToWorld } from './rng';
+import { createReceipt, appendReceipt } from '../core/idempotency';
 
 export interface CommandContext {
   actorId: string;
@@ -1012,18 +1013,17 @@ export function reduceEconomy(
 
   // Append central command receipt for idempotency ledger
   if (context?.commandId) {
-    state.commandReceipts = state.commandReceipts || [];
-    state.commandReceipts.push({
-      commandId: context.commandId,
-      simMinute,
-      actorId: context.actorId || 'system',
-      type: command.type,
-      success: true,
-      receiptChecksum: `chk_${command.type}_${simMinute}_${seq}`
-    });
-    if (state.commandReceipts.length > 100) {
-      state.commandReceipts = state.commandReceipts.slice(-100);
-    }
+    state.commandReceipts = appendReceipt(
+      state.commandReceipts || [],
+      createReceipt(
+        context.commandId,
+        simMinute,
+        context.actorId || 'system',
+        command.type,
+        true,
+        command.payload
+      )
+    );
   }
 
   state.nextEventSequence = seq;

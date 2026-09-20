@@ -85,10 +85,11 @@ export function processCatDeath(
       : state.selectedCatId;
 
   // Create Memorial Record
-  const memorialId = `mem_${catId}_${deceasedAtMinute}`;
+  const memorialId = `mem_${catId}`;
   const newMemorial: MemorialRecord = {
     id: memorialId,
     deceasedCatId: catId,
+    name: cat.name,
     catName: cat.name,
     appearance: cat.appearance,
     traits: cat.traits,

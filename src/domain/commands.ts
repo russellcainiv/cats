@@ -53,6 +53,11 @@ export type GameCommand =
   | { type: 'ENTER_FREE_BUILD'; payload: Record<string, never> }
   | { type: 'COMMIT_FREE_BUILD'; payload: Record<string, never> }
   | { type: 'CANCEL_FREE_BUILD'; payload: Record<string, never> }
+  | { type: 'DISCARD_FREE_BUILD'; payload?: Record<string, never> }
+  | { type: 'UNDO_BUILD'; payload: { lotId: LotId } }
+  | { type: 'UNDO_BUILD_ACTION'; payload: { lotId: LotId } }
+  | { type: 'REDO_BUILD'; payload: { lotId: LotId } }
+  | { type: 'REDO_BUILD_ACTION'; payload: { lotId: LotId } }
 
   // Social / Romance
   | {
@@ -519,13 +524,18 @@ export function dispatch(
         // Delegate to subsystem reducer
         const subResult = handleSubsystemCommand(nextState, command, context, rng);
         if (subResult.error) {
+          if (subResult.error.code === 'MOO_MOO_DECLINED') {
+            nextState = subResult.state;
+            events.push(...subResult.events);
+            break;
+          }
           return { ok: false, state, error: subResult.error };
         }
         if (!subResult.handled) {
           return {
             ok: false,
             state,
-            error: { code: 'UNKNOWN_COMMAND', message: `Unknown command type: ${(command as any).type}` },
+            error: { code: 'COMMAND_NOT_SUPPORTED', message: `Command ${(command as any).type} is not supported` },
           };
         }
         nextState = subResult.state;
@@ -536,6 +546,8 @@ export function dispatch(
 
     // Persist updated RNG snapshot
     const rngSnap = rng.snapshot();
+    const existingEventIds = new Set(nextState.events.map((e) => e.id));
+    const uniqueNewEvents = events.filter((e) => !existingEventIds.has(e.id));
     nextState = {
       ...nextState,
       rng: {
@@ -543,7 +555,7 @@ export function dispatch(
         counter: rngSnap.drawCount,
         serializedState: rng.serialize(),
       },
-      events: [...nextState.events, ...events].slice(-128),
+      events: [...nextState.events, ...uniqueNewEvents].slice(-128),
       revision: nextState.revision + 1,
     };
 

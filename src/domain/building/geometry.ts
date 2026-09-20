@@ -37,18 +37,29 @@ export function getTransformedInteractSpots(
 ): GridCell[] {
   const dims = getRotatedDimensions(baseWidth, baseHeight, rotation);
   return interactSpots.map(spot => {
-    let rx = spot.x;
-    let ry = spot.y;
+    const isAlreadyAbsolute = (x > 0 || y > 0) &&
+      spot.x >= x - 1 && spot.x <= x + baseWidth + 1 &&
+      spot.y >= y - 1 && spot.y <= y + baseHeight + 1 &&
+      (spot.x >= x || spot.y >= y);
+
+    if (isAlreadyAbsolute && rotation === 0) {
+      return { x: spot.x, y: spot.y };
+    }
+
+    let rx = isAlreadyAbsolute ? spot.x - x : spot.x;
+    let ry = isAlreadyAbsolute ? spot.y - y : spot.y;
 
     if (rotation === 90) {
-      rx = baseHeight - 1 - spot.y;
-      ry = spot.x;
+      const origRx = rx;
+      rx = baseHeight - 1 - ry;
+      ry = origRx;
     } else if (rotation === 180) {
-      rx = baseWidth - 1 - spot.x;
-      ry = baseHeight - 1 - spot.y;
+      rx = baseWidth - 1 - rx;
+      ry = baseHeight - 1 - ry;
     } else if (rotation === 270) {
-      rx = spot.y;
-      ry = baseWidth - 1 - spot.x;
+      const origRx = rx;
+      rx = ry;
+      ry = baseWidth - 1 - origRx;
     }
 
     return { x: x + rx, y: y + ry };

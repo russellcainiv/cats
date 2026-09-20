@@ -21,14 +21,27 @@ export function calculateMoodScore(cat: CatRecord): number {
 }
 
 export function getRelationship(
-  socialState: SocialSubsystemState,
+  socialState: SocialSubsystemState | any,
   catA: CatId,
-  catB: CatId
+  catB: CatId,
+  cats?: Record<CatId, CatRecord>
 ): SocialRelationship {
   const key = pairKey(catA, catB);
-  const existing = socialState.relationships[key];
+  const existing = socialState?.relationships?.[key];
   if (existing) {
     return existing;
+  }
+  if (cats && cats[catA]?.relationships?.[catB]) {
+    const r = cats[catA].relationships[catB];
+    return {
+      friendship: r.friendship ?? 0,
+      romance: r.romance ?? 0,
+      isLove: Boolean(r.isLove),
+      isRival: (r.friendship ?? 0) <= -40,
+      isFriend: (r.friendship ?? 0) >= 50,
+      interactionCount: 1,
+      lastInteractionSimMinute: r.lastInteractionMinute ?? 0,
+    };
   }
   return {
     friendship: 0,
@@ -37,7 +50,7 @@ export function getRelationship(
     isRival: false,
     isFriend: false,
     interactionCount: 0,
-    lastInteractionSimMinute: 0
+    lastInteractionSimMinute: 0,
   };
 }
 

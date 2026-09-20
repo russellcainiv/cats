@@ -116,12 +116,13 @@ describe('Moo-Moo Romance, Mutual Readiness, and Pregnancy Capacity', () => {
     state.lifecycle.pregnancies[pregId] = {
       id: pregId,
       parentIds: ['cat_mochi', 'cat_wasabi'],
-      startedAtSimMinute: state.clock.simMinute,
-      dueAtSimMinute: state.clock.simMinute + 4320,
+      startedAtSimMinute: 0,
+      dueAtSimMinute: 4320,
       reservedSlots: 2,
       conceptionEventId: 'evt_start',
     };
     state.cats['cat_wasabi'].pregnancyId = pregId;
+    state.clock.simMinute = 4320; // Gestation completed (OBS-02)
 
     const livingBefore = state.livingCatIds.length; // 2
     expect(livingBefore).toBe(2);

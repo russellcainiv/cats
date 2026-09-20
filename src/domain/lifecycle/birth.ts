@@ -84,7 +84,10 @@ export function processGestationTick(
         },
       };
       events.push(event);
+      continue;
     }
+
+
   }
 
   if (modified) {

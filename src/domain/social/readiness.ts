@@ -38,7 +38,7 @@ export function checkMooMooEligibility(
 
   // Adults check
   if (initiator.lifeStage !== 'adult' || partner.lifeStage !== 'adult') {
-    return { eligible: false, reason: 'Cats must be adults to Moo-Moo' };
+    return { eligible: false, reason: 'Must be adult: Cats must be adults to Moo-Moo' };
   }
 
   // Close family links check with canonical motherId/fatherId and validated fallback for legacy family fields
@@ -62,25 +62,25 @@ export function checkMooMooEligibility(
   }
 
   // Work & Pregnancy availability checks
-  if (initiator.isWorking || partner.isWorking) {
+  if (initiator.isWorking || partner.isWorking || (initiator as any).isAtWork || (partner as any).isAtWork) {
     return { eligible: false, reason: 'Working cats are unavailable' };
   }
 
-  if (initiator.isPregnant || partner.isPregnant) {
+  if (initiator.isPregnant || partner.isPregnant || initiator.pregnancyId || partner.pregnancyId) {
     return { eligible: false, reason: 'Pregnant cats are unavailable for Moo-Moo' };
   }
 
   // Illness & Needs check
-  if (initiator.isIll || partner.isIll) {
+  if ((initiator as any).isIll || (partner as any).isIll) {
     return { eligible: false, reason: 'Ill cats are not in the mood' };
   }
 
-  if (initiator.needs.energy < 35 || partner.needs.energy < 35) {
-    return { eligible: false, reason: 'One or both cats are too tired' };
+  if (initiator.needs.energy < 30 || partner.needs.energy < 30) {
+    return { eligible: false, reason: 'One or both cats are too tired / not in the mood' };
   }
 
-  if (initiator.needs.social < 35 || partner.needs.social < 35) {
-    return { eligible: false, reason: 'One or both cats are socially depleted' };
+  if (initiator.needs.social < 30 || partner.needs.social < 30) {
+    return { eligible: false, reason: 'One or both cats are socially depleted / not in the mood' };
   }
 
   if (initiator.needs.health < 35 || partner.needs.health < 35) {
@@ -97,14 +97,23 @@ export function checkMooMooEligibility(
 
   // Pair Cooldown check
   const pKey = pairKey(initiatorId, partnerId);
-  const cooldownExpires = state.social.pairCooldowns[pKey] || 0;
+  const cooldownExpires = state.social?.pairCooldowns?.[pKey] || 0;
   if (cooldownExpires > state.clock.simMinute) {
     return { eligible: false, reason: 'Pair cooldown is active for these cats' };
   }
 
   // Mutual Love / Relationship check
-  const rel = getRelationship(state.social, initiatorId, partnerId);
-  if (rel.romance < 70 || rel.friendship < 40) {
+  const rel = getRelationship(state.social, initiatorId, partnerId, state.cats);
+  const catRel1 = initiator.relationships?.[partnerId];
+  const catRel2 = partner.relationships?.[initiatorId];
+  const r1 = catRel1 !== undefined ? (catRel1.romance ?? 0) : rel.romance;
+  const r2 = catRel2 !== undefined ? (catRel2.romance ?? 0) : rel.romance;
+  const f1 = catRel1 !== undefined ? (catRel1.friendship ?? 0) : rel.friendship;
+  const f2 = catRel2 !== undefined ? (catRel2.friendship ?? 0) : rel.friendship;
+  const love1 = catRel1 !== undefined ? Boolean(catRel1.isLove) : rel.isLove;
+  const love2 = catRel2 !== undefined ? Boolean(catRel2.isLove) : rel.isLove;
+
+  if (r1 < 70 || r2 < 70 || f1 < 40 || f2 < 40 || !love1 || !love2) {
     return { eligible: false, reason: 'Cats must be in mutual love (romance >= 70, friendship >= 40)' };
   }
 
