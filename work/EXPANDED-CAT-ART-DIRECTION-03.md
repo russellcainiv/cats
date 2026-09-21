@@ -1,0 +1,16 @@
+# New user authority: complete generated art and rare cat discovery
+
+2026-09-20, current thread, after family/genetics note02:
+
+1. "you probably have to build all the artwork and assets gpt image" and "while they do all the coding". Coordinator owns GPT Image generation; AGY/Jules continue implementation in parallel. All actual game art must come from reusable GPT Image assets, not emoji or generic procedural blocks. Keep standard layout/geometry/collision and text rendering in code. The approved composition image is a direction reference, not a fake static game background.
+2. "I want ito include all kinds of cats, even rare kinds, and those ones are rare to get". Broad cat collection is required, not the current three-breed placeholder.
+3. "I want it to be cute like they still do human like activities but cat like u know what i mean". Feline bodies, paws, faces, movement and instincts remain; human-like life activities are adapted to cats. Examples: paws knead dough, dab paint, dig gardens, carry a small basket; they still loaf, nap in boxes, groom and interrupt themselves for yarn. Career outfits fit cat anatomy; no human torsos or human hands. Supported activity animations must be real state-driven actions.
+4. Rare acquisition answer: "No we we need to make it like you find them in the wild or something rarely". Rare cats are discovered through exploration and befriending, not freely spawned by creator. Don't bypass this with a creator rare-unlock loophole. Preserve real-cat recreation for ordinary cats; special wild/fantasy discovery stays earned.
+5. Collection scope answer: "Domestic cats plus rare wild cats and fantasy cats".
+6. Explicit final clarification: "WILD AND FANTASY CATS ARE THE RAREST". Both wild and fantasy form the rarest encounter class(es), less available than every ordinary/rare domestic class. Probabilities are designed game odds, not claims about actual animal populations. Real breed appearance facts should use TICA/CFA primary sources; fantasy designs are original.
+
+Integration constraints: preserve four living+reserved slots per player and eight total, mutual autonomy and Moo-Moo readiness, permanent loss, no offline farming/time catch-up. Finding/befriending a rare cat must remain possible at capacity, but recruitment atomically checks slots and never deletes or evicts another cat. Persist the encounter schedule, RNG, discoveries, friendship and commitments so reload/device races cannot reroll spawns or duplicate recruits. No paid random draws. New-genetics 10% novel pool (pending exact odds choice) cannot freely mutate common cats into undiscovered rare wild/fantasy forms; special ancestry/eligible genetics must preserve discovery rarity.
+
+Planning owner should add R27 genetics, R28 GPT Image asset completeness, R29 broad collection/rare exploration and R30 feline human-like activities as additive requirements/tasks as needed. Existing acceptance criteria and base BAR remain intact. Do not call all content implemented just because catalog entries or a generated atlas exist: every represented form/action must render, animate and work in gameplay.
+
+Primary reference URLs checked by coordinator: https://tica.org/ticas-breeds/browse-all-breeds/ and https://cfa.org/breeds/ . These support breed names/appearance reference, not game rarity weights.

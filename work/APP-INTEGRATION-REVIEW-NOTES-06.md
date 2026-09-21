@@ -1,0 +1,7 @@
+# Engine review update — must apply repaired engine before acceptance
+
+Independent composition review of engine 485dc190627e50e9362bd569e4fce72db43ffd10 finished at 83/100, CHANGES_REQUESTED. Read `/Users/russell/.codex/worktrees/cats-engine/Cats/work/reviews/composition-round1/review.json` and REVIEW.md. Nine verified problems: dispatch RNG clobber, café tick RNG clobber, autonomous related-cat conception bypass, lifecycle hazard warning path omitted, hardcoded birth bypassing genetics, free arbitrary adoption bypassing candidate pool, home versus lot_home divergence, missing canonical starter content/economy state, and starter furniture ID mismatch.
+
+Coordinator has assigned the engine checkout a dedicated repair mission `work/orchestrator/ENGINE-COMPOSITION-REPAIR-03.md`. That worker exclusively owns domain repairs there. Continue independent auth/server/persistence and UI integration; do not duplicate or overwrite its domain repair. When its new commit lands, import/merge its changes preserving your necessary server adapters. Current 485dc19 is a composition baseline, not accepted game behavior. Domain public entrypoint testing is required after import, including birth, RNG, intervention, adoption, and home navigation.
+
+Latest user scope remains in LINEAGE-CUSTOMIZATION-05.md: multi-generation family tree preserving names and species, new deterministic in-game hybrid names at successful birth, expanded furnishings and customization. Planner is updating canonical Tasks43/44 alongside co-op and genetics. No relaxing original gates.

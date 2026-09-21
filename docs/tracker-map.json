@@ -5,7 +5,7 @@
       "number": 1,
       "id": 5519204869,
       "url": "https://github.com/russellcainiv/cats/issues/1",
-      "title": "Cats — complete game specification and implementation roadmap"
+      "title": "Cats \u2014 complete game specification and implementation roadmap"
     },
     "task-01": {
       "number": 2,
@@ -149,7 +149,7 @@
       "number": 25,
       "id": 5519214615,
       "url": "https://github.com/russellcainiv/cats/issues/25",
-      "title": "[Cats 24] Own and operate a cat café"
+      "title": "[Cats 24] Own and operate a cat caf\u00e9"
     },
     "task-25": {
       "number": 26,
@@ -199,11 +199,83 @@
       "url": "https://github.com/russellcainiv/cats/issues/33",
       "title": "[Cats 32] Release the verified private gift"
     },
+    "task-33": {
+      "number": 39,
+      "id": 5521369034,
+      "url": "https://github.com/russellcainiv/cats/issues/39",
+      "title": "[Cats 33] Private family membership, invite links, and multi-actor access control"
+    },
+    "task-34": {
+      "number": 40,
+      "id": 5521369451,
+      "url": "https://github.com/russellcainiv/cats/issues/40",
+      "title": "[Cats 34] Real-time SSE transport, command sequencing, and authoritative host lease"
+    },
+    "task-35": {
+      "number": 41,
+      "id": 5521369818,
+      "url": "https://github.com/russellcainiv/cats/issues/41",
+      "title": "[Cats 35] Multi-actor world presence, selection reticles, and shared pause semantics"
+    },
+    "task-36": {
+      "number": 42,
+      "id": 5521370193,
+      "url": "https://github.com/russellcainiv/cats/issues/42",
+      "title": "[Cats 36] Concurrent economy, building, and Moo-Moo conflict resolution"
+    },
+    "task-37": {
+      "number": 43,
+      "id": 5521370974,
+      "url": "https://github.com/russellcainiv/cats/issues/43",
+      "title": "[Cats 37] Shared-room host failover, offline zero-advance, and two-device reconnection recovery"
+    },
+    "task-38": {
+      "number": 44,
+      "id": 5521371593,
+      "url": "https://github.com/russellcainiv/cats/issues/44",
+      "title": "[Cats 38] End-to-end mother-daughter co-op verification on physical desktop and phone"
+    },
+    "task-39": {
+      "number": 45,
+      "id": 5521372028,
+      "url": "https://github.com/russellcainiv/cats/issues/45",
+      "title": "[Cats 39] Percentage-based kitten inheritance of looks and traits with per-player capacity reservation"
+    },
+    "task-40": {
+      "number": 46,
+      "id": 5521372331,
+      "url": "https://github.com/russellcainiv/cats/issues/46",
+      "title": "[Cats 40] Complete reusable GPT Image artwork integration across rooms, lots, cats, outfits, and UI"
+    },
+    "task-41": {
+      "number": 48,
+      "id": 5521373029,
+      "url": "https://github.com/russellcainiv/cats/issues/48",
+      "title": "[Cats 41] Broad domestic, wild, and fantasy cat catalog with exploration discovery and dex recruitment"
+    },
+    "task-42": {
+      "number": 50,
+      "id": 5521373412,
+      "url": "https://github.com/russellcainiv/cats/issues/50",
+      "title": "[Cats 42] Feline-adapted human-like career and hobby activities with authentic instinct animations"
+    },
+    "task-43": {
+      "number": 52,
+      "id": 5521374049,
+      "url": "https://github.com/russellcainiv/cats/issues/52",
+      "title": "[Cats 43] Durable multi-generation lineage tree, relatedness guards, and hybrid naming"
+    },
+    "task-44": {
+      "number": 55,
+      "id": 5521374429,
+      "url": "https://github.com/russellcainiv/cats/issues/55",
+      "title": "[Cats 44] Expanded functional customization, furniture catalog, and room palettes"
+    },
     "map": {
       "number": 34,
       "id": 5519218010,
       "url": "https://github.com/russellcainiv/cats/issues/34",
-      "title": "Cats — decisions to validate during implementation"
+      "title": "Cats \u2014 decisions to validate during implementation"
     },
     "01-recipient": {
       "number": 35,
@@ -222,161 +294,6 @@
       "id": 5519219003,
       "url": "https://github.com/russellcainiv/cats/issues/37",
       "title": "Approve the playable phone composition"
-    }
-  },
-  "linear": {
-    "team": "CATS",
-    "project": "https://linear.app/rciv/project/cats-browser-game-28162bce1f26/overview",
-    "sync": "native bidirectional",
-    "issues": {
-      "spec": {
-        "identifier": "CATS-1",
-        "url": "https://linear.app/rciv/issue/CATS-1"
-      },
-      "task-01": {
-        "identifier": "CATS-2",
-        "url": "https://linear.app/rciv/issue/CATS-2"
-      },
-      "task-02": {
-        "identifier": "CATS-3",
-        "url": "https://linear.app/rciv/issue/CATS-3"
-      },
-      "task-03": {
-        "identifier": "CATS-4",
-        "url": "https://linear.app/rciv/issue/CATS-4"
-      },
-      "task-04": {
-        "identifier": "CATS-5",
-        "url": "https://linear.app/rciv/issue/CATS-5"
-      },
-      "task-05": {
-        "identifier": "CATS-6",
-        "url": "https://linear.app/rciv/issue/CATS-6"
-      },
-      "task-06": {
-        "identifier": "CATS-7",
-        "url": "https://linear.app/rciv/issue/CATS-7"
-      },
-      "task-07": {
-        "identifier": "CATS-8",
-        "url": "https://linear.app/rciv/issue/CATS-8"
-      },
-      "task-08": {
-        "identifier": "CATS-9",
-        "url": "https://linear.app/rciv/issue/CATS-9"
-      },
-      "task-09": {
-        "identifier": "CATS-10",
-        "url": "https://linear.app/rciv/issue/CATS-10"
-      },
-      "task-10": {
-        "identifier": "CATS-11",
-        "url": "https://linear.app/rciv/issue/CATS-11"
-      },
-      "task-11": {
-        "identifier": "CATS-12",
-        "url": "https://linear.app/rciv/issue/CATS-12"
-      },
-      "task-12": {
-        "identifier": "CATS-13",
-        "url": "https://linear.app/rciv/issue/CATS-13"
-      },
-      "task-13": {
-        "identifier": "CATS-14",
-        "url": "https://linear.app/rciv/issue/CATS-14"
-      },
-      "task-14": {
-        "identifier": "CATS-15",
-        "url": "https://linear.app/rciv/issue/CATS-15"
-      },
-      "task-15": {
-        "identifier": "CATS-16",
-        "url": "https://linear.app/rciv/issue/CATS-16"
-      },
-      "task-16": {
-        "identifier": "CATS-17",
-        "url": "https://linear.app/rciv/issue/CATS-17"
-      },
-      "task-17": {
-        "identifier": "CATS-18",
-        "url": "https://linear.app/rciv/issue/CATS-18"
-      },
-      "task-18": {
-        "identifier": "CATS-19",
-        "url": "https://linear.app/rciv/issue/CATS-19"
-      },
-      "task-19": {
-        "identifier": "CATS-20",
-        "url": "https://linear.app/rciv/issue/CATS-20"
-      },
-      "task-20": {
-        "identifier": "CATS-21",
-        "url": "https://linear.app/rciv/issue/CATS-21"
-      },
-      "task-21": {
-        "identifier": "CATS-22",
-        "url": "https://linear.app/rciv/issue/CATS-22"
-      },
-      "task-22": {
-        "identifier": "CATS-23",
-        "url": "https://linear.app/rciv/issue/CATS-23"
-      },
-      "task-23": {
-        "identifier": "CATS-24",
-        "url": "https://linear.app/rciv/issue/CATS-24"
-      },
-      "task-24": {
-        "identifier": "CATS-25",
-        "url": "https://linear.app/rciv/issue/CATS-25"
-      },
-      "task-25": {
-        "identifier": "CATS-26",
-        "url": "https://linear.app/rciv/issue/CATS-26"
-      },
-      "task-26": {
-        "identifier": "CATS-27",
-        "url": "https://linear.app/rciv/issue/CATS-27"
-      },
-      "task-27": {
-        "identifier": "CATS-28",
-        "url": "https://linear.app/rciv/issue/CATS-28"
-      },
-      "task-28": {
-        "identifier": "CATS-29",
-        "url": "https://linear.app/rciv/issue/CATS-29"
-      },
-      "task-29": {
-        "identifier": "CATS-30",
-        "url": "https://linear.app/rciv/issue/CATS-30"
-      },
-      "task-30": {
-        "identifier": "CATS-31",
-        "url": "https://linear.app/rciv/issue/CATS-31"
-      },
-      "task-31": {
-        "identifier": "CATS-32",
-        "url": "https://linear.app/rciv/issue/CATS-32"
-      },
-      "task-32": {
-        "identifier": "CATS-33",
-        "url": "https://linear.app/rciv/issue/CATS-33"
-      },
-      "map": {
-        "identifier": "CATS-34",
-        "url": "https://linear.app/rciv/issue/CATS-34"
-      },
-      "01-recipient": {
-        "identifier": "CATS-35",
-        "url": "https://linear.app/rciv/issue/CATS-35"
-      },
-      "02-balance": {
-        "identifier": "CATS-36",
-        "url": "https://linear.app/rciv/issue/CATS-36"
-      },
-      "03-phone-art": {
-        "identifier": "CATS-37",
-        "url": "https://linear.app/rciv/issue/CATS-37"
-      }
     }
   }
 }

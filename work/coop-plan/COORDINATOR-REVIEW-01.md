@@ -1,0 +1,13 @@
+# Co-op plan review, before publication or implementation
+
+User scope is confirmed; one shared household on separate devices is an explicitly stated WORKING DEFAULT while optional user replies remain pending. R26 has been added in the foundation requirement ledger andR11 explicitly includes the daughter. Do not record choices as user-confirmed.
+
+Fix these material plan issues:
+1. Do not drop the existing unique households.owner_id constraint merely to add co-op membership. One user owning one household does not prevent another authorized member joining it. Preserve task01 owner-create concurrency safety. Separate-home alternatives can still use one owned household per user. Any future multiple-owned-household capability needs its own explicit rationale/migration; it is not required here.
+2. A30s authority lease cannot guarantee5s ungraceful failover. Define exact heartbeat/expiry/fencing/bounded-reconnect timing and truthful user feedback. A graceful departure may revoke immediately; an abrupt disconnect cannot. Existing30sCAS/fencing semantics may be extended by explicit co-op design, not ignored.
+3. Visibility is not authoritative proof that nobody is playing after process/network loss. Strict no-background progress needs client-driven tick commands tied to active presence/lease, server-side limits and no wall-clock catch-up. Explain exact tick acceptance/race/final snapshot semantics instead of promising a magical timestamp on lid close.
+4. Long-lived SSE is bounded on Vercel and multiple function instances have no reliable shared memory. Verify current official platform limits and define reconnect/cursor/replay, durable outbox or snapshot polling, Postgres fan-out/pooling and resource lifetime. A hosted real-time provider is acceptable if actually provisioned and scoped, but do not leave an unspecified external dependency.
+5. All18 goals must consume shared canonical real completion events, not manual counters; conflicts on finite stock/litter/build/selection are atomic and all clients receive truthful results. Cat selection does not need a hard exclusive lock unless action collision semantics require it. Avoid arbitrary control restrictions that make the second player spectator.
+6. Invite tokens are secret capabilities: hash at rest, single-use/expiry/revocation/rate limits/atomic redemption, server derives actor from session, and rejoin must not require repeatedly pasting a token or exposing it in logs/history/referrers. No public signup/childDOB collection/chat or external invitations sent without explicit user instruction.
+
+Update the plan and proposed task/addendum text, preserve original criteria, then submit to independent blind review. Do not edit app/source or publish tracker items from this planning lane.

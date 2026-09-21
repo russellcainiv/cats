@@ -1,0 +1,34 @@
+{
+  "id": 39,
+  "slug": "percentage-kitten-genetics",
+  "title": "Percentage-based kitten inheritance of looks and traits with per-player capacity reservation",
+  "depends": [
+    19,
+    20,
+    36
+  ],
+  "requirements": [
+    "R16",
+    "R17",
+    "R19",
+    "R20",
+    "R21",
+    "R26",
+    "R27"
+  ],
+  "delivers": "Deliver complete vertical slice for percentage-based kitten inheritance of looks and personality traits from both parents (45/45/10 default, 50/50 configurable), immutable conception snapshots, provenance tracking, 4-slot-per-player capacity clamping in shared 8-cat households, safe migration, and responsive family tree / kitten inspection UI.",
+  "criteria": [
+    "Implement inheritAppearance and inheritTraits supporting both 45/45/10 and 50/50 odds via configuration with exact same-parent value aggregation and bounded non-colliding trait selection.",
+    "Inherit only supported catalog features (breed, primaryColor, secondaryColor, pattern, eyeColor, bodyType, 2 personality traits); strictly exclude career outfits, accessories, skills, and moods.",
+    "Execute deterministic canonical PRNG allocation sequence with zero rejection loops, guaranteeing reproducible phenotypes and traits across client and server.",
+    "Capture immutable ParentGeneticsSnapshot at conception; resolve birth against snapshot so parent death, career change, or departure during 3-day gestation cannot distort genetics.",
+    "Enforce hard limit of 4 living/reserved cats per player and 8 per household; assign reserved kitten slots at conception and atomically convert to living cats at birth without silent reassignment.",
+    "Persist immutable baseAppearance and KittenGeneticsProvenance on each kitten; migrate existing saves deterministically without RNG rerolls.",
+    "Deliver responsive desktop/phone DOM HUD kitten birth card and Family Tree view displaying inheritance breakdown, Coral/Lavender custody indicators, with zero layout shift."
+  ],
+  "module": "simulation",
+  "button": "Inspect kitten inheritance",
+  "testid": "kitten-genetics-breakdown",
+  "expected": "Inherited from Mom (Mochi)",
+  "status": "ready-for-agent"
+}

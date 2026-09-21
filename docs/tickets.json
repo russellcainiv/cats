@@ -858,6 +858,378 @@
       "testid": "household-status",
       "expected": "Ready",
       "status": "ready-for-agent"
+    },
+    {
+      "id": 33,
+      "slug": "family-membership-invites",
+      "title": "Private family membership, invite links, and multi-actor access control",
+      "depends": [
+        1,
+        3
+      ],
+      "requirements": [
+        "R01",
+        "R11",
+        "R26"
+      ],
+      "delivers": "Owner generates private invite links; daughter joins without child PII; preserves households.owner_id unique constraint; multi-member access control on all routes.",
+      "criteria": [
+        "Primary owner can generate a cryptographic invite link (POST /api/households/[id]/invites) with SHA-256 token hashing at rest (token_hash), 72-hour expiration, and single-use limit (max_uses = 1); link is shown in UI for local copying and never transmitted to external services without explicit user command.",
+        "An invited family member can redeem the link via POST /api/invites/redeem without disclosing date of birth, age, or external personal data; server sets an authenticated session cookie (cats_session) and associates the account with household_members under family_member role; rejoin uses session cookie without re-pasting token.",
+        "Database migration preserves the existing unique constraint on households.owner_id (idx_households_owner_unique), maintaining Task 01 owner-create concurrency safety, while creating household_members to manage multi-member authorization and roles (owner and family_member).",
+        "All household and save routes (/api/households/[id]/*) verify requester membership in household_members; unauthenticated users receive 401, non-members receive 403, cross-household access is blocked, and owner-only operations (revocation, deletion) enforce role === 'owner'."
+      ],
+      "module": "access",
+      "button": "Copy family invite link",
+      "testid": "family-member-list",
+      "expected": "Daughter (Family Member)",
+      "status": "ready-for-agent"
+    },
+    {
+      "id": 34,
+      "slug": "coop-sse-transport-sequencing",
+      "title": "Real-time SSE transport, command sequencing, and authoritative host lease",
+      "depends": [
+        3,
+        33
+      ],
+      "requirements": [
+        "R04",
+        "R10",
+        "R26"
+      ],
+      "delivers": "Next.js SSE stream route with durable Postgres poll loop (no in-memory broadcast), monotonic PostgreSQL command sequencing (coop_commands), 10s simulation host lease with 3s heartbeats.",
+      "criteria": [
+        "GET /api/households/[id]/coop/stream establishes an authenticated text/event-stream returning initial state snapshot, active member presence, and live event broadcasts with periodic keep-alive pings; stream duration is bounded (~55s) to stay within Vercel execution bounds.",
+        "POST /api/households/[id]/coop/command accepts player commands from either authorized member, assigns a monotonic cmd_seq in PostgreSQL, appends to coop_commands, and makes updates durable; SSE route handlers across ephemeral serverless instances poll coop_commands (WHERE cmd_seq > $lastSeen every 250–500ms via ReadableStream with connection pool limits and request-abort cleanup) rather than relying on in-memory broadcast.",
+        "Server enforces a dynamic simulation lease (sim_leases table) with a 10-second TTL; the designated host client periodically renews the lease via heartbeat (POST /api/households/[id]/coop/heartbeat) every 3 seconds.",
+        "Reconnection with standard browser EventSource supports Last-Event-ID / sequence resumption, replaying missed commands from PostgreSQL coop_commands since last received sequence without dropping or duplicating events."
+      ],
+      "module": "transport",
+      "button": "Connect co-op stream",
+      "testid": "coop-sync-status",
+      "expected": "Connected (Host: Mom)",
+      "status": "ready-for-agent"
+    },
+    {
+      "id": 35,
+      "slug": "multiactor-presence-shared-pause",
+      "title": "Multi-actor world presence, selection reticles, and shared pause semantics",
+      "depends": [
+        2,
+        34
+      ],
+      "requirements": [
+        "R01",
+        "R04",
+        "R09",
+        "R26"
+      ],
+      "delivers": "Coral and Lavender reticles on Pixi canvas; HUD presence avatars; instant cooperative pause and zero-advance pause banner.",
+      "criteria": [
+        "PixiJS viewport renders distinctive pastel selection reticles (Mom: Coral ring #FF7A59; Daughter: Lavender ring #A78BFA) over the respective cat each player has selected; selection is visual-only and non-exclusive.",
+        "HUD presence bar displays connected family members with active/away indicators and selected cat portraits; clicking partner's portrait smoothly pans camera to their target cat.",
+        "Either player can press the Pause button at any time; coop_pause command broadcasts instantly, setting isPaused = true, stopping fixed-step sim advance on all clients, and displaying a prominent banner stating who paused (Paused by Daughter or Paused by Mom).",
+        "While paused, all cat needs decay, career departure timers, and aging advance strictly cease; unpausing broadcasts coop_resume and resumes synchronized fixed-step simulation."
+      ],
+      "module": "world",
+      "button": "Pause simulation",
+      "testid": "coop-pause-banner",
+      "expected": "Paused by Daughter",
+      "status": "ready-for-agent"
+    },
+    {
+      "id": 36,
+      "slug": "concurrent-actions-conflict-resolution",
+      "title": "Concurrent economy, building, and Moo-Moo conflict resolution",
+      "depends": [
+        7,
+        8,
+        10,
+        19,
+        35
+      ],
+      "requirements": [
+        "R06",
+        "R12",
+        "R13",
+        "R16",
+        "R17",
+        "R18",
+        "R19",
+        "R20",
+        "R21",
+        "R26"
+      ],
+      "delivers": "Server-side canonical dispatch inside Postgres transaction; caretaker slot profile custody; race-condition resolvers for cat care, grid cell building collision, wallet deduction, and 8-cat capacity clamping under dual Moo-Moo. Shared canonical goal events.",
+      "criteria": [
+        "When both players issue conflicting commands to the same cat simultaneously, the earlier sequenced command claims the cat; the secondary command fails gracefully with clear toast feedback (\"Mochi is currently busy with Mom\") without desynchronizing simulation state.",
+        "Simultaneous furniture placement or building edits on the same grid cell resolve cleanly: the first placed item occupies the cell, and the second is rejected with cell-occupied feedback and zero wallet deduction.",
+        "Concurrent wallet expenditures check current balance atomically in database transaction; if combined purchases exceed funds, the second transaction is rejected with INSUFFICIENT_FUNDS without creating negative balances or duplicate items.",
+        "Concurrent Moo-Moo actions strictly enforce the two-tier capacity limit (<= 4 living/reserved cats per player, <= 8 total in household); when capacity is reached or clamped, litter size clamps to remaining capacity, reserving slots deterministically without silent reassignment, eviction, or deletion. When 0 slots remain, conception roll is bypassed (0 PRNG consumed) and Moo-Moo completes as affection only (R21).",
+        "All commands execute canonical server-side dispatch inside a PostgreSQL transaction holding row locks (SELECT ... FOR UPDATE), atomically committing world, revision, event, and receipt before SSE visibility; ticks advance time server-side without client-authored replacement state; caretaker slot profiles (Profile Alpha / Profile Beta) enforce living+reserved 4-cat limits with explicit REASSIGN_CAT_CUSTODY verifying capacity.",
+        "All 18 goals evaluate shared canonical real completion events from the shared simulation stream, updating progress and unlocks for both players simultaneously."
+      ],
+      "module": "simulation",
+      "button": "Place cat tree",
+      "testid": "conflict-feedback-toast",
+      "expected": "Mochi is busy with Mom",
+      "status": "ready-for-agent"
+    },
+    {
+      "id": 37,
+      "slug": "host-failover-reconnect-recovery",
+      "title": "Shared-room host failover, offline zero-advance, and two-device reconnection recovery",
+      "depends": [
+        29,
+        34,
+        35
+      ],
+      "requirements": [
+        "R04",
+        "R09",
+        "R10",
+        "R26"
+      ],
+      "delivers": "10-second host lease failover (10–12s max failover wait); command log compaction (15m) separated from durable command receipts; snapshot reload on compacted Last-Event-ID; strict zero offline advance when unattended.",
+      "criteria": [
+        "When the current host client cleanly navigates away or pauses, POST /coop/lease/release marks lease expired, enabling peer to claim host role via POST /coop/lease/claim in < 1 second.",
+        "When the current host client abruptly drops (crash, power loss, network drop), its 10-second sim_lease expires; the peer watchdog detects expiration after 10 seconds and acquires host authority via atomic CAS POST /coop/lease/claim within 10–12 seconds, showing a calming reconnecting status pill and resuming simulation without data loss.",
+        "When all connected members are away or disconnected (visibilitychange: hidden or closed tabs), simulation advances exactly 0 sim minutes; recovery upon return loads the exact last committed state revision with zero offline progression or wall-clock catch-up (R09).",
+        "A reconnecting or late-joining client fetches the latest committed snapshot from /api/households/[id], queries uncommitted commands from /api/households/[id]/coop/stream using Last-Event-ID, and catches up deterministically to the active host within 1.5 seconds; if Last-Event-ID was compacted (> 15m), server emits event: snapshot_reload with the full current snapshot and cursor sequence.",
+        "Command log compaction prunes ephemeral coop_commands older than 15 minutes after snapshot commit, while separate durable command_receipts preserve monotonic actor sequences (actor_seq); old or unreplayable IDs return explicit 409 Conflict (EXPIRED_COMMAND_SEQUENCE) and are never silently treated as new."
+      ],
+      "module": "persistence",
+      "button": "Simulate host disconnect",
+      "testid": "host-failover-indicator",
+      "expected": "Host authority transferred to Daughter",
+      "status": "ready-for-agent"
+    },
+    {
+      "id": 38,
+      "slug": "e2e-coop-verification-gauntlet",
+      "title": "End-to-end mother-daughter co-op verification on physical desktop and phone",
+      "depends": [
+        28,
+        31,
+        35,
+        36,
+        37
+      ],
+      "requirements": [
+        "R01",
+        "R04",
+        "R05",
+        "R08",
+        "R09",
+        "R10",
+        "R14",
+        "R20",
+        "R21",
+        "R26"
+      ],
+      "delivers": "Full dual-device physical dogfooding (desktop mouse + phone touch) passing all 5 Co-Op Gauntlet Gates with zero regressions.",
+      "criteria": [
+        "Both devices (Desktop mouse/keyboard and Phone/Tablet touch) simultaneously control different cats, interact with furniture, feed, play, and build without UI overlap, clipping, or input blocking.",
+        "Career clothing renders accurately on both viewports when a cat leaves for work and restores upon return; 8-cat limit holds firm under all family actions.",
+        "Physical network disconnects (airplane mode toggle on phone, Wi-Fi reconnection) recover within 5 seconds without desync or duplicate cats.",
+        "Independent blind review and physical dogfooding capture passes all 5 Co-Op Gauntlet Gates with zero defects.",
+        "Preserves all original Task 01–32 baseline requirements and criteria intact with zero regression."
+      ],
+      "module": "verification",
+      "button": "Run co-op gauntlet",
+      "testid": "coop-verification-summary",
+      "expected": "Co-op Verification Passed (All Gates Green)",
+      "status": "ready-for-agent"
+    },
+    {
+      "id": 39,
+      "slug": "percentage-kitten-genetics",
+      "title": "Percentage-based kitten inheritance of looks and traits with per-player capacity reservation",
+      "depends": [
+        19,
+        20,
+        36
+      ],
+      "requirements": [
+        "R16",
+        "R17",
+        "R19",
+        "R20",
+        "R21",
+        "R26",
+        "R27"
+      ],
+      "delivers": "Deliver complete vertical slice for percentage-based kitten inheritance of looks and personality traits from both parents (45/45/10 working default, 50/50 configurable), immutable conception snapshots, provenance tracking, 4-slot-per-player capacity clamping in shared 8-cat households, safe migration, and responsive family tree / kitten inspection UI.",
+      "criteria": [
+        "Implement inheritAppearance and inheritTraits supporting both 45/45/10 working default and 50/50 configurable odds via parameter with exact same-parent value aggregation, two-stage non-colliding trait selection, and zero-division guards on exhausted parent pools (novel catalog fallback under 45/45/10; pre-conception validation |PA u PB| >= 2 under 50/50 with actionable repair prompts for invalid legacy parents).",
+        "Inherit only supported catalog features using approved art direction colors (primary/secondary colors within approved palette: Black, White, Brown, Tan, Ginger, Grey, Cream) and enforce the canonical invariant of exactly two distinct personality traits from canonical 10-trait catalog; strictly exclude career outfits, accessories, skills, and moods.",
+        "Enforce lineage and rarity gating: novel 10% mutation rolls draw strictly from common domestic catalog, never producing undiscovered rare wild or fantasy breeds unless eligible rare ancestry exists.",
+        "Execute deterministic canonical PRNG allocation sequence with zero rejection loops or rerolls, guaranteeing reproducible phenotypes and traits across client and server.",
+        "Capture immutable ParentGeneticsSnapshot at conception; resolve birth against snapshot so parent death, career change, or departure during 3-day gestation cannot distort genetics.",
+        "Enforce two-tier capacity invariant of 4 living/reserved cats per player and 8 per household; assign reserved kitten slots at conception (Dam-primary with partner-overflow) and atomically convert to living cats at birth without silent reassignment, eviction, or deletion.",
+        "Persist immutable baseAppearance and KittenGeneticsProvenance on each kitten; migrate existing saves deterministically without RNG rerolls.",
+        "Deliver responsive desktop/phone DOM HUD kitten birth card and Family Tree view displaying inheritance breakdown, Coral/Lavender custody indicators, with zero layout shift."
+      ],
+      "module": "simulation",
+      "button": "Inspect kitten inheritance",
+      "testid": "kitten-genetics-breakdown",
+      "expected": "Inherited from Mom (Mochi)",
+      "status": "ready-for-agent"
+    },
+    {
+      "id": 40,
+      "slug": "gpt-image-art-integration",
+      "title": "Complete reusable GPT Image artwork integration across rooms, lots, cats, outfits, and UI",
+      "depends": [
+        2,
+        7,
+        15,
+        27
+      ],
+      "requirements": [
+        "R05",
+        "R06",
+        "R24",
+        "R25",
+        "R28"
+      ],
+      "delivers": "Deliver complete vertical slice integrating reusable GPT Image visual assets across cutaway rooms, 30+ furnishings, 7 lots, cat base sprites and portraits, career uniforms, tools, and UI icons, replacing procedural placeholders with approved art direction.",
+      "criteria": [
+        "Integrate modular GPT Image sprite sheets and texture atlases matching approved pastel cartoon and pixel neighborhood art direction (docs/art/approved-direction.png) across cutaway rooms, 7 lots, and all 30+ canonical furnishings without static full-screen pastes.",
+        "Render layered cat sprite components (base body types, coat colors/patterns, eye colors, career uniforms, and collar accessories) and matching high-resolution dialogue/inspection portraits in PixiJS and DOM viewports.",
+        "Replace procedural geometric placeholder blocks and emoji with authentic game art assets while preserving underlying grid geometry, pathfinding collision meshes, and typography rendering in code.",
+        "Deliver asset loading, caching, fallback handling, and responsive scaling ensuring zero layout shift and smooth 60fps rendering across desktop (1280x800) and mobile touch (390x844) viewports."
+      ],
+      "module": "world",
+      "button": "View art atlas",
+      "testid": "gpt-image-asset-atlas",
+      "expected": "Asset pipeline loaded: approved direction",
+      "status": "ready-for-agent"
+    },
+    {
+      "id": 41,
+      "slug": "rare-cat-dex-and-discovery",
+      "title": "Broad domestic, wild, and fantasy cat catalog with exploration discovery and dex recruitment",
+      "depends": [
+        4,
+        15,
+        16,
+        17,
+        39
+      ],
+      "requirements": [
+        "R04",
+        "R07",
+        "R15",
+        "R24",
+        "R27",
+        "R29"
+      ],
+      "delivers": "Deliver complete vertical slice for broad cat collection catalog grounded in TICA/CFA domestic standards, exploration encounter scheduler, persistent befriending and recruitment flow, and discovery Cat Dex UI with durable state.",
+      "criteria": [
+        "Implement comprehensive cat catalog featuring common domestic breeds (grounded in official TICA/CFA appearance standards), mixed coats, rare wild cats (e.g. Scottish Wildcat, Pallas's Cat, Sand Cat, Lynx), and mythical fantasy cats (e.g. Moonlit Celestial, Cloud-Weaver, Sun-Gilded Pixie, Starlight Shadow).",
+        "Enforce strict acquisition gating: starter Cat Creator permits only domestic and mixed recreation (preserving real-cat creation); wild and fantasy cats form the rarest tiers with concrete category encounter weights (70% Common Domestic, 24% Uncommon Domestic, 5% Rare Domestic, 0.75% Rare Wild across 8 species, 0.25% Mythical Fantasy across 8 forms) and can ONLY be discovered through outdoor neighborhood exploration.",
+        "Execute deterministic exploration encounter scheduler governed by active simulation time (1 real second = 1 sim minute; 60 sim minutes active window; 0 delta when paused/offline); active encounters persist in world.neighborhood.activeEncounters so reload, revisit, or co-op views return the exact same encounter without reroll exploits.",
+        "Support full-household befriending and recruitment flow: befriended rare cats can be invited to join when player capacity allows (<= 4 per player, <= 8 household); at full capacity, befriended cats remain persistent neighborhood friends who visit regularly without forced eviction of existing cats.",
+        "Deliver responsive Cat Dex collection UI on desktop and phone displaying discovered breeds, encounter logs, habitat lore, and recruitment status with zero pay-to-draw mechanics or randomized microtransactions."
+      ],
+      "module": "gameplay",
+      "button": "Open Cat Dex",
+      "testid": "cat-dex-discovery-list",
+      "expected": "Wild & Fantasy Discoveries",
+      "status": "ready-for-agent"
+    },
+    {
+      "id": 42,
+      "slug": "feline-activity-and-animation",
+      "title": "Feline-adapted human-like career and hobby activities with authentic instinct animations",
+      "depends": [
+        6,
+        11,
+        12,
+        13,
+        27,
+        40
+      ],
+      "requirements": [
+        "R02",
+        "R03",
+        "R06",
+        "R11",
+        "R12",
+        "R13",
+        "R14",
+        "R15",
+        "R18",
+        "R30"
+      ],
+      "delivers": "Deliver complete vertical slice for feline-adapted career/hobby activities and natural cat instinct animations, featuring paw-based interactions, four-legged tailored workwear, and state-driven behavior polish.",
+      "criteria": [
+        "Implement feline-adapted action animations for careers and hobbies: cats knead dough with front paws at the café, dig garden beds with front claws, dab paint onto canvases with paw tips or mouth-held brushes, and carry harvest baskets in jaws, strictly avoiding human torsos or hands.",
+        "Render four-legged tailored career uniforms (Café Assistant apron, Garden Keeper overalls, Gallery Helper smock/beret) that fit natural cat anatomy without warping and automatically equip on work departure and restore on return.",
+        "Implement authentic feline instinct behaviors and idle animations: loafing, curling up in cardboard boxes, mutual head-bunting, self-grooming, tail flicks indicating mood, spontaneous zoomies, and autonomous distraction by yarn or laser toys.",
+        "Integrate state-driven animation controller with audio effects and visual particle feedback, synchronizing action states across co-op sessions and maintaining 60fps on both desktop and mobile touch devices."
+      ],
+      "module": "simulation",
+      "button": "Watch cat activity",
+      "testid": "feline-action-indicator",
+      "expected": "Kneading dough with paws",
+      "status": "ready-for-agent"
+    },
+    {
+      "id": 43,
+      "slug": "durable-lineage-and-hybrid-naming",
+      "title": "Durable multi-generation lineage tree, relatedness guards, and hybrid naming",
+      "depends": [
+        20,
+        39
+      ],
+      "requirements": [
+        "R20",
+        "R27",
+        "R31"
+      ],
+      "delivers": "Deliver complete vertical slice for durable multi-generation lineage tracking, ancestor relatedness validation, deterministic order-independent hybrid breed naming at birth, and interactive family tree UI across desktop and mobile.",
+      "criteria": [
+        "Implement multi-generation lineage data structure in WorldState.lineage: each cat records immutable lineageId, parentAId, parentBId, and snapshot (nameAtConception, breed, appearanceSnapshot, isGhost); deceased/memorial cats retain ancestry nodes without erasure, and cycles are strictly rejected via DAG validation.",
+        "Implement genealogical relatedness checker (areCatsRelated(catA, catB, maxGenerations = 3)) that traverses ancestor graph to prevent inbreeding and Moo-Moo romance between parent-child, full/half siblings, and grandparent-grandchild, providing gentle explanatory in-game feedback.",
+        "Implement deterministic order-independent hybrid breed naming engine: when parents of distinct breeds successfully give birth, compute recipe key sort([breedA, breedB]).join('x') to assign cute coined hybrid names (e.g. Bengal x Ragdoll -> Ragdal); preserve exact foundation breeds and generation depth (F1, F2), preventing unbounded hyphenation/concatenation; names generate only at birth, not on unsuccessful romance.",
+        "Build interactive Family Tree UI component for desktop (1280x800) and mobile (390x844): hierarchical pan/zoom node tree displaying portraits, names, birth breeds, hybrid badges, and ghost indicators, with tap-to-inspect card showing relatives, synchronized across co-op devices."
+      ],
+      "module": "simulation",
+      "button": "View family tree",
+      "testid": "family-tree-view",
+      "expected": "Ragdal (F1 Hybrid)",
+      "status": "ready-for-agent"
+    },
+    {
+      "id": 44,
+      "slug": "expanded-customization-and-furniture",
+      "title": "Expanded functional customization, furniture catalog, and room palettes",
+      "depends": [
+        7,
+        10,
+        40
+      ],
+      "requirements": [
+        "R07",
+        "R10",
+        "R28",
+        "R32"
+      ],
+      "delivers": "Deliver complete vertical slice for expanded functional furnishings (at least 64 usable items across 4 room styles), comprehensive cat and room customization palettes, explicit need-satisfaction affordances, and modular GPT Image rendering.",
+      "criteria": [
+        "Implement expanded content catalog module (src/content/furniture/ and src/domain/building/adapter.ts) providing at least 64 unique functional and decorative items categorized across room styles (Cozy Cottage, Modern Cat, Whimsical Play, Rustic Garden), including multi-tile cat trees, scratch lounges, heated beds, climbing shelves, automatic fountains, puzzle feeders, and ambient lighting.",
+        "Define explicit interaction affordances and need satisfaction for all functional items: cats can climb climbing shelves to satisfy Fun, scratch sisal lounges to satisfy Scratch need and preserve sofa durability, drink from bubbling fountains for Hydration/Thirst, and sleep in heated beds for high Comfort/Energy recovery.",
+        "Expand cat customization and home aesthetics: implement 16 additional coat pattern variants, 8 eye color palettes, and 12 wardrobe accessories (collars, bows, bandanas, bells), plus reversible room wall/floor swatch palettes, with atomic preview and buy/undo transactions.",
+        "Integrate modular GPT Image rendering pipeline for all 64+ items with directional sprites, placement bounding boxes, collision navmesh updates, and mobile touch placement controls with fluid drag/rotate gestures and price badge clearance."
+      ],
+      "module": "building",
+      "button": "Open expanded catalog",
+      "testid": "expanded-furniture-catalog",
+      "expected": "Cozy Heated Cat Bed",
+      "status": "ready-for-agent"
     }
   ]
 }
