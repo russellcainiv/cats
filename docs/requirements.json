@@ -52,7 +52,7 @@
   {
     "id": "R11",
     "title": "Private gift",
-    "decision": "Game access is for her and testing; public source does not authorize public gameplay registration."
+    "decision": "Game access is for her, her daughter and testing; public source does not authorize public gameplay registration."
   },
   {
     "id": "R12",
@@ -67,7 +67,7 @@
   {
     "id": "R14",
     "title": "Careers",
-    "decision": "Scheduled careers with skills and promotions."
+    "decision": "Scheduled careers with skills and promotions. Cats wear clothes relating to their careers when they go off to work."
   },
   {
     "id": "R15",
@@ -123,5 +123,40 @@
     "id": "R25",
     "title": "Included picture",
     "decision": "Include the exact approved image in the model handoff and repository."
+  },
+  {
+    "id": "R26",
+    "title": "Private family co-op",
+    "decision": "She and her daughter can play together simultaneously from their own devices in one shared household with up to four cats per player (eight household total). Preserve private family access, mutual presence, cooperative pause, all existing gameplay and no unattended offline progression."
+  },
+  {
+    "id": "R27",
+    "title": "Kitten genetics and inheritance",
+    "decision": "Percentage-based inheritance of looks and personality traits from both parents (working default 45% dam / 45% sire / 10% novel domestic mutation; configurable 50/50 strict parental). Exact same-parent aggregation, immutable conception snapshots, two distinct traits via dynamic weight redistribution, deterministic PRNG sequence, strict non-inheritance of outfits/skills/moods/money, 4-cat-per-player capacity reservations, and lineage gating preventing novel rolls from handing out undiscovered fantasy/wild cats."
+  },
+  {
+    "id": "R28",
+    "title": "Complete reusable GPT Image artwork",
+    "decision": "All in-game visual assets (rooms, furnishings, lots, cat sprites and portraits, career uniforms, tools, crops, recipes, neighborhood tiles, and UI icons) derive from reusable GPT Image originals matching the approved pastel cartoon and pixel neighborhood direction, replacing placeholder emoji/blocks while keeping geometry, collision, and text rendering in code."
+  },
+  {
+    "id": "R29",
+    "title": "Broad cat collection and rare exploration discovery",
+    "decision": "Comprehensive cat collection encompassing domestic breeds (grounded in official TICA/CFA standards), mixed coats, rare wild cats, and mythical fantasy cats. Wild and fantasy cats are the rarest tiers, discovered and befriended through exploration, never starter-created. Durable discovery, no reload/device-swap rerolls, full-household befriending without forced eviction, and no paid random draws."
+  },
+  {
+    "id": "R30",
+    "title": "Feline-adapted human-like activities and authentic behaviors",
+    "decision": "Cats perform human-like career and hobby activities adapted authentically to feline anatomy and paws (kneading dough, digging gardens, dabbing paint, carrying baskets, tailored 4-legged career outfits without human torsos or hands), interspersed with authentic feline instincts (loafing, box napping, grooming, head-bunting, tail language, and zoomies)."
+  },
+  {
+    "id": "R31",
+    "title": "Durable lineage and hybrid breed naming",
+    "decision": "Durable multi-generation family tree tracking parents, grandparents, and deeper ancestors/descendants across generations, preserving cat names, species/breed, portraits, mixed ancestry, and life/death/memorial status without loss on rename, death, or member churn. When two distinct breeds successfully conceive and give birth, offspring receive cute newly coined in-game hybrid breed names (e.g. Bengal × Ragdoll -> Ragdal) generated deterministically at birth with order-independent recipe keys. Exact foundation lineage is preserved without infinite name concatenation, cycle-free ancestor graphs enforce relatedness guards against inbreeding, and wild/fantasy discovery gates cannot be bypassed."
+  },
+  {
+    "id": "R32",
+    "title": "Expanded functional customization and furniture",
+    "decision": "Expanded functional furnishings and customization collection providing at least 64 usable furnishings and decorations across distinct room styles (Cozy Cottage, Modern Cat, Whimsical Play, Rustic Garden), alongside extensive wardrobe accessories, coat palettes, eye colors, and home decor patterns. All items have explicit catalog entries, interaction/need-satisfaction or decorative tags, price/unlock progression, reversible placement, and real generated art frames loaded via a dedicated content module and engine adapter without stock/placeholder assets."
   }
 ]

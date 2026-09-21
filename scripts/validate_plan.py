@@ -58,7 +58,7 @@ def load():
 
 def requirements():
     reqs, tickets = load()
-    assert len(reqs) == 25, f'Confirmed decision ledger changed: {len(reqs)}'
+    assert len(reqs) == 32, f'Confirmed decision ledger changed: {len(reqs)}'
     assert len({r['id'] for r in reqs}) == len(reqs)
     spec_text = read('.scratch/cats/spec.md')
     for r in reqs:

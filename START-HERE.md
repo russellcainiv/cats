@@ -4,7 +4,7 @@ Read README.md, the full spec, approved picture, architecture, contracts and tic
 
 ## Assignment
 
-Implement the whole agreed browser cat life simulation, in dependency-ready vertical slices, with real interactions, persistence and mobile/desktop parity. Do not stop at a static illustration, a prototype, an unfinished UI or a PR. All confirmed requirements live in docs/requirements.json; all build tasks live in docs/tickets.json and one Markdown file each under .scratch/cats/issues. Published GitHub identities are recorded in docs/tracker-map.json; Linear synchronization evidence is in docs/linear-setup.md.
+Implement the whole agreed browser cat life simulation, in dependency-ready vertical slices, with real interactions, persistence and mobile/desktop parity. Do not stop at a static illustration, a prototype, an unfinished UI or a PR. All confirmed requirements (R01–R32) live in docs/requirements.json; all 44 build tasks live in docs/tickets.json and one Markdown file each under .scratch/cats/issues. Published GitHub identities are recorded in docs/tracker-map.json; Linear synchronization evidence is in docs/linear-setup.md.
 
 ## Read in order
 
@@ -13,6 +13,9 @@ Implement the whole agreed browser cat life simulation, in dependency-ready vert
 3. [Domain glossary](CONTEXT.md).
 4. [Architecture](docs/architecture.md), [contracts](docs/contracts.md), and relevant ADRs.
 5. [Implementation plan](docs/superpowers/plans/2026-09-20-cats.md), [ticket index](docs/ticket-index.md) and [progress](PROGRESS.md).
+6. [Co-op Gauntlet addendum](.gauntlet/bar/COOP-ADDENDUM.md).
+7. [Content Gauntlet addendum](.gauntlet/bar/CONTENT-ADDENDUM.md).
+8. [Lineage and Customization Gauntlet addendum](.gauntlet/bar/LINEAGE-CUSTOMIZATION-ADDENDUM.md).
 
 ## Rules for the executor
 

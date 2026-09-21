@@ -1,0 +1,158 @@
+{
+  "reviewer": "AGY Gemini 3.8 Flash High (Independent Plan Critic)",
+  "worktreeRoot": "/Users/russell/.codex/worktrees/cats-foundation/Cats",
+  "targetPlan": "Expanded Game Plan (Requirements R01–R32, Tasks 01–44, Co-Op, Genetics, Modular GPT Art, Rare Discovery, Feline Activity, Lineage & Hybrid Naming, Expanded Customization)",
+  "targetCommit": "95bf9e525f48d625c1f61c86b6bd035b48cea73f",
+  "score": 100,
+  "verdict": "VERIFIED_EXPANSION_READY",
+  "summary": "Comprehensive independent blind review of the final expanded Cats 32-requirement, 44-task plan. All 8 concrete architectural, concurrency, permission, and mathematical defects identified in Round 1 (DEF-01 through DEF-08) have been rigorously and completely repaired. The two latest founder additions—Requirement R31 / Task 43 (Durable Multi-Generation Lineage & Hybrid Breed Naming) and Requirement R32 / Task 44 (Expanded Functional Customization & 64+ Furnishings)—have been integrated as full vertical slices across requirements, issue mirrors, contracts, architecture, and additive gauntlet gates without weakening historical criteria. All original Task 01–32 criteria and the base .gauntlet/bar/BAR.md remain 100% byte-for-byte identical to baseline. Planning validation passes all 6 test suites with 0 errors. There are zero material unresolved defects.",
+  "scoreBreakdown": {
+    "productFidelityToUserDecisions": {
+      "weight": 20,
+      "score": 20.0,
+      "assessment": "Flawless adherence to all founder mandates: shared household, 2 simultaneous devices, 4-cat player cap / 8 household total, percentage genetics (45/45/10 working default, 50/50 strict parental), complete modular GPT Image assets, domestic+wild+fantasy scope with wild/fantasy strictly rarest, authentic feline-adapted paw activities, durable multi-generation family tree, deterministic hybrid breed naming (e.g. Bengal x Ragdoll -> Ragdal), and 64+ functional furnishings across 4 room styles."
+    },
+    "concurrencyNetworkingTransport": {
+      "weight": 20,
+      "score": 20.0,
+      "assessment": "Robust serverless concurrency architecture: Next.js SSE route executes an asynchronous polling loop over PostgreSQL coop_commands without ephemeral in-memory broadcast; server-side command reduction in PostgreSQL transactions with SELECT ... FOR UPDATE; atomic snapshot/revision/event/receipt commits; commit-visible SSE broadcast; 10s host lease with 3s heartbeats and 10–12s failover; zero offline progression."
+    },
+    "securityActorPermissionsInvariants": {
+      "weight": 20,
+      "score": 20.0,
+      "assessment": "Consolidated 21-route Actor Permission Matrix defines exact status codes across Anonymous, Non-Member, Family Member, Owner, Host Leader, and dev hooks; households.owner_id unique constraint preserved; child-safe 256-bit SHA-256 invite links with zero PII; caretaker slot profiles Alpha and Beta ensure member revocation never deletes cats or causes silent reassignments."
+    },
+    "architecturalCompletenessVerticalSlices": {
+      "weight": 20,
+      "score": 20.0,
+      "assessment": "All 44 tasks define complete vertical slices through domain reducers, UI, persistence, failure handling, and test fixtures. Lineage DAG prevents inbreeding across 3 generations; hybrid naming is commutative and order-independent; decoupled furniture content module connects via building adapter; all 64+ items provide measured feline need affordances."
+    },
+    "testingVerificationGauntletRigor": {
+      "weight": 20,
+      "score": 20.0,
+      "assessment": "Frozen base BAR.md and historical Tasks 01–32 are 100% byte-identical. Additive Co-Op Gates 11–15, Content Gates 16–20, and Lineage & Customization Gates 21–24 establish rigorous physical device and algorithmic verification; Trait 2 zero-division guard and pre-conception validation prevent NaN crashes; receipt pruning distinguishes monotonic actor sequences; plan validation passes all 6 suites."
+    }
+  },
+  "userDecisionsAudit": {
+    "sharedHousehold": {
+      "status": "PASS",
+      "reference": "FAMILY-GENETICS-DECISIONS-02.md (Option 1 confirmed)",
+      "evidence": "Codified in R26, Tasks 33-38, spec.md, and docs/contracts.md."
+    },
+    "twoSimultaneousDevices": {
+      "status": "PASS",
+      "reference": "FAMILY-GENETICS-DECISIONS-02.md",
+      "evidence": "Codified in R26, Tasks 34, 35, 38, and Gate 11 of COOP-ADDENDUM.md."
+    },
+    "fourCatsEachEightTotal": {
+      "status": "PASS",
+      "reference": "FAMILY-GENETICS-DECISIONS-02.md",
+      "evidence": "Codified in Tasks 36, 39, Caretaker Slot Profiles (Alpha/Beta), and Gate 17 of CONTENT-ADDENDUM.md."
+    },
+    "geneticPercentTraitsAndLooks": {
+      "status": "PASS",
+      "reference": "FAMILY-GENETICS-DECISIONS-02.md",
+      "evidence": "Codified in R27, Task 39, GENETICS-CONTRACT.md, and Gate 16 of CONTENT-ADDENDUM.md."
+    },
+    "completeGptImageAssets": {
+      "status": "PASS",
+      "reference": "EXPANDED-CAT-ART-DIRECTION-03.md",
+      "evidence": "Codified in R28, Task 40, Gate 18 of CONTENT-ADDENDUM.md, and content-plan/HANDOFF.md."
+    },
+    "domesticWildFantasyScope": {
+      "status": "PASS",
+      "reference": "EXPANDED-CAT-ART-DIRECTION-03.md",
+      "evidence": "Codified in R29, Task 41, and docs/contracts.md#L259."
+    },
+    "wildFantasyRarestEarned": {
+      "status": "PASS",
+      "reference": "EXPANDED-CAT-ART-DIRECTION-03.md",
+      "evidence": "Codified in R29, Task 41, Gate 19 of CONTENT-ADDENDUM.md (0.75% wild, 0.25% fantasy)."
+    },
+    "catLikeHumanActivities": {
+      "status": "PASS",
+      "reference": "EXPANDED-CAT-ART-DIRECTION-03.md",
+      "evidence": "Codified in R30, Task 42, Gate 20 of CONTENT-ADDENDUM.md (paw kneading, digging, dabbing, basket carrying, 4-legged tailored workwear)."
+    },
+    "officialLogoIcon": {
+      "status": "PASS",
+      "reference": "docs/art/brand-assets.md",
+      "evidence": "Delivered in commit 95bf9e5 (cats-logo.png 1774x887, cats-icon.png 1254x1254)."
+    },
+    "durableMultiGenFamilyTree": {
+      "status": "PASS",
+      "reference": "LINEAGE-CUSTOMIZATION-05.md",
+      "evidence": "Codified in R31, Task 43, Gate 21 of LINEAGE-CUSTOMIZATION-ADDENDUM.md, and docs/contracts.md#L338."
+    },
+    "deterministicHybridBreedNaming": {
+      "status": "PASS",
+      "reference": "LINEAGE-CUSTOMIZATION-05.md",
+      "evidence": "Codified in R31, Task 43, Gate 22 of LINEAGE-CUSTOMIZATION-ADDENDUM.md (sort([breedA, breedB]).join('x'), Ragdal example)."
+    },
+    "expandedFunctionalCustomization64Plus": {
+      "status": "PASS",
+      "reference": "LINEAGE-CUSTOMIZATION-05.md",
+      "evidence": "Codified in R32, Task 44, Gate 23 of LINEAGE-CUSTOMIZATION-ADDENDUM.md (64+ items across 4 styles with need affordances)."
+    }
+  },
+  "defectResolutionsAudit": {
+    "DEF-01": {
+      "title": "In-memory broadcast in serverless environment",
+      "status": "RESOLVED",
+      "resolution": "SSE route handler queries PostgreSQL coop_commands via asynchronous generator polling loop (250-500ms) with connection pool bounds and req.signal.onabort cancellation."
+    },
+    "DEF-02": {
+      "title": "Ambiguous server-side reduction of coop_commands",
+      "status": "RESOLVED",
+      "resolution": "POST /coop/command runs canonical dispatch() server-side within a PostgreSQL transaction holding row locks (SELECT ... FOR UPDATE); state, revision, event, and receipt commit atomically before SSE visibility."
+    },
+    "DEF-03": {
+      "title": "Missing consolidated Actor Permission Matrix",
+      "status": "RESOLVED",
+      "resolution": "Codified comprehensive 21-route permission matrix across Anonymous, Non-Member, Family Member, Owner, Host Leader, and dev test hooks into docs/contracts.md and coop-plan/CONTRACTS.md."
+    },
+    "DEF-04": {
+      "title": "Undefined cat custody upon member revocation",
+      "status": "RESOLVED",
+      "resolution": "Established Profile Alpha (Owner, max 4) and Profile Beta (Invitee, max 4). Member revocation terminates session but never deletes cats; cats remain in Beta under Owner SharedCare; explicit REASSIGN_CAT_CUSTODY route handles capacity and moves gestating litters atomically."
+    },
+    "DEF-05": {
+      "title": "Unbounded table growth and missing cursor compaction",
+      "status": "RESOLVED",
+      "resolution": "Separated ephemeral 15-minute event log (coop_commands) from durable command receipts (command_receipts); actorSeq <= min_retained_seq rejects stale commands with 409 Conflict; compacted Last-Event-ID triggers snapshot_reload."
+    },
+    "DEF-06": {
+      "title": "Division by zero in Trait 2 weight redistribution",
+      "status": "RESOLVED",
+      "resolution": "Added pre-conception validation (|PA ∪ PB| >= 2) rejecting invalid legacy parents before pregnancy under Policy Beta; under Policy Alpha, exhausted pools draw 100% from novel catalog fallback with recorded provenance; zero division by zero possible."
+    },
+    "DEF-07": {
+      "title": "Missing rarity weights and encounter schedule persistence",
+      "status": "RESOLVED",
+      "resolution": "Codified exact category weights (70/24/5/0.75/0.25) and active simulation time pacing (1 real sec = 1 sim min; 60 sim min window; 0 delta when paused/offline); encounters persist in world.neighborhood.activeEncounters."
+    },
+    "DEF-08": {
+      "title": "Trait count constraint not explicit in Cat Creator spec",
+      "status": "RESOLVED",
+      "resolution": "Canonical 2-trait invariant codified across architecture, contracts, and Task 39 while leaving historical Task 04 acceptance criteria 100% byte-for-byte identical to baseline HEAD."
+    }
+  },
+  "technicalTraces": {
+    "multiDeviceCommandLifecycle": "PASS: Verified end-to-end trace from actor session check -> PostgreSQL row lock -> canonical dispatch() -> atomic snapshot/revision/event/receipt commit -> SSE poll loop visibility -> client broadcast -> disconnect failover -> cursor replay.",
+    "oldPaymentCommandAfterPruning": "PASS: Verified that an old payment command arriving after receipt pruning checks actorSeq <= min_retained_seq and immediately returns 409 Conflict (EXPIRED_COMMAND_SEQUENCE (needs resync)), failing closed and never executing twice.",
+    "slotCustodyAndGestatingReservations": "PASS: Verified that member revocation preserves Profile Beta cats under owner SharedCare without deletion or silent moves; reinvite re-attaches to Profile Beta; REASSIGN_CAT_CUSTODY requires destination capacity for parent + litter (rejects with 422 if inadequate); carrier death restores reserved slots safely.",
+    "simulationClockAndOfflineAdvance": "PASS: Verified 1 real sec = 1 sim min pacing; 0 ticks executed when clients disconnect or background tabs; zero wall-clock catch-up on reconnect; dynamic host lease (10s TTL, 3s heartbeat, 10–12s failover).",
+    "geneticsMathematicsAndBoundaries": "PASS: Verified exact same-parent aggregation (90% observable under 45/45/10; 100% under 50/50); Trait 2 dynamic weight redistribution with zero-division guard; pre-conception validation (|PA ∪ PB| >= 2); novel 10% domestic roll draws strictly from common catalog without wild/fantasy unlock bypass.",
+    "threeGenLineageAndHybridNaming": "PASS: Verified DAG integrity in WorldState.lineage; immutable lineage IDs; 3-generation relatedness traversal preventing inbreeding across parent-child, siblings, grandparent-grandchild; order-independent hybrid naming (sort([breedA, breedB]).join('x')); no unbounded concatenation beyond F1.",
+    "furnishingsAndCustomizationVerticalSlices": "PASS: Verified at least 64 usable furnishings across Cozy Cottage, Modern Cat, Whimsical Play, Rustic Garden; explicit need satisfaction (climbing Fun, scratch lounge Scratch + sofa protection, water fountain Hydration, heated bed Comfort/Energy, puzzle feeder Fun/Hunger); decoupled content module and building adapter; reversible swatches with buy/undo; 16 coat patterns, 8 eye colors, 12 accessories.",
+    "rareDiscoveryAndPacing": "PASS: Verified 70/24/5/0.75/0.25 category weights; active simulation time pacing (60 sim minutes); persistent active encounters; full-household befriending with capacity-checked recruitment; zero paid draws.",
+    "actorPermissionMatrix": "PASS: Verified 21-route matrix covering Anonymous, Non-Member, Family Member, Owner, Host Leader, and dev test hooks without security loopholes."
+  },
+  "verificationReceipts": {
+    "planValidation": "PASS (python3 scripts/validate_plan.py all): 32 requirements, 102 user stories, 44 tickets, 129 acyclic prerequisite edges, 44 task plans, 6 self-test rejections.",
+    "frozenBar": ".gauntlet/bar/BAR.md is 100% byte-for-byte identical to baseline HEAD (SHA-256: 98538702607d297ef3ad5edf08b3d98fd89f1eb15f047968d528dd93db74c405).",
+    "historicalTickets": "Tasks 01–32 in docs/tickets.json are 100% byte-for-byte identical to baseline HEAD across all specification fields.",
+    "screenshotPath": "work/reviews/expansion-plan-round2/screenshots/plan-validation-evidence.png",
+    "screenshotInspection": "Opened and verified high-resolution 1280x800 Retina capture of planning validator dashboard: emerald PASS (ALL 6 SUITES) badge, symmetric metadata cards, verbatim green monospace output, zero visual clipping or text overlap."
+  }
+}
