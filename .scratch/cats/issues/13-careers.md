@@ -14,7 +14,6 @@
 - [ ] Departure, attendance, return and payment are real saved activities, with wages issued once.
 - [ ] Handle lateness, low needs, job changes, dismissal, interruption and death without phantom pay.
 - [ ] Career UI explains progress on phone and desktop; off-camera work shares the paused world clock.
-- [ ] Cats automatically wear a distinct outfit matching their career at departure and during work; return, cancellation and job change restore the ordinary look without changing coat/accessories, and mid-shift saves preserve the correct outfit.
 - [ ] Deliver the actual UI, domain behavior, persistence/API validation, failure states and tests for this slice. Do not mark complete for mock data, static screenshots, or an isolated domain function.
 - [ ] Dogfood its whole workflow on desktop and phone; capture and OPEN every screenshot, record what was inspected, and fix visual defects before acceptance.
 - [ ] Obtain independent blind review against the intended request, approved art, whole-game mission and regression risks. Preserve all acceptance criteria.

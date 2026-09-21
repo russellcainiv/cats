@@ -325,8 +325,7 @@
         "Each track defines schedules, skill criteria, wages and explicit promotion requirements.",
         "Departure, attendance, return and payment are real saved activities, with wages issued once.",
         "Handle lateness, low needs, job changes, dismissal, interruption and death without phantom pay.",
-      "Career UI explains progress on phone and desktop; off-camera work shares the paused world clock.",
-      "Cats automatically wear a distinct outfit matching their career at departure and during work; return, cancellation and job change restore the ordinary look without changing coat/accessories, and mid-shift saves preserve the correct outfit."
+        "Career UI explains progress on phone and desktop; off-camera work shares the paused world clock."
       ],
       "module": "careers",
       "button": "Join career",
@@ -703,8 +702,7 @@
         "Meet the spec content inventory: creator choices, object functions/variants, locations, NPCs, crops, careers, recipes and goals.",
         "Every item has stable ID, icon, footprint, interaction anchors, cost and runtime assets; no dead buttons or missing textures.",
         "Produce clean consistent sprites/tiles/animation from approved direction; record provenance and manifest hashes.",
-      "Inspect all affected desktop and phone states against the approved picture without using the picture as production scenery.",
-      "Provide distinct career clothing assets and world/portrait animations for work departure, shift and return, readable on phone and desktop and driven by saved career state."
+        "Inspect all affected desktop and phone states against the approved picture without using the picture as production scenery."
       ],
       "module": "content",
       "button": "Open furniture catalog",

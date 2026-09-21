@@ -14,7 +14,6 @@
 - [ ] Every item has stable ID, icon, footprint, interaction anchors, cost and runtime assets; no dead buttons or missing textures.
 - [ ] Produce clean consistent sprites/tiles/animation from approved direction; record provenance and manifest hashes.
 - [ ] Inspect all affected desktop and phone states against the approved picture without using the picture as production scenery.
-- [ ] Provide distinct career clothing assets and world/portrait animations for work departure, shift and return, readable on phone and desktop and driven by saved career state.
 - [ ] Deliver the actual UI, domain behavior, persistence/API validation, failure states and tests for this slice. Do not mark complete for mock data, static screenshots, or an isolated domain function.
 - [ ] Dogfood its whole workflow on desktop and phone; capture and OPEN every screenshot, record what was inspected, and fix visual defects before acceptance.
 - [ ] Obtain independent blind review against the intended request, approved art, whole-game mission and regression risks. Preserve all acceptance criteria.

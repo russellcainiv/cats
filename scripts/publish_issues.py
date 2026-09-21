@@ -98,7 +98,7 @@ def verify():
         observed={i['id'] for i in api(f'repos/{REPO}/issues/{issue["number"]}/dependencies/blocked_by?per_page=100')}
         expected={mapping[f'task-{n:02d}']['id'] for n in t['depends']}
         assert observed == expected, ('dependencies',t['id'],observed,expected)
-    print(f'PASS GitHub: {len(specs())} open issues; exact bodies; all labels; 35 sub-issue links; {sum(len(t["depends"]) for t in data)} native dependency edges')
+    print(f'PASS GitHub: {len(specs())} open issues; exact bodies; all labels; 47 sub-issue links; {sum(len(t["depends"]) for t in data)} native dependency edges')
 
 if __name__=='__main__':
     mode=sys.argv[1]
