@@ -20,6 +20,8 @@ export type GameView = {
     lastRoute: { lotId: string; x: number; y: number }[];
     needs: { hunger: number; energy: number; fun: number };
     state: 'idle' | 'moving' | 'sleeping';
+    appearance: { variant: string };
+    traits: { id: string; level: number }[];
   }>;
   home: {
     lotId: string;

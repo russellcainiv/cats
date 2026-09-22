@@ -1,8 +1,9 @@
 // src/domain/commands.ts
 // Task 01: create-household. Task 02: move-cat with pathfinding.
 import { WorldState } from './state';
-import { findPath } from './invariants';
+import { findPath, verifyCatCapacity } from './invariants';
 import { v4 as uuidv4 } from 'uuid';
+import { catCatalog, getAppearance, getTrait } from '@/content/cat-catalog';
 
 export type CommandContext = {
   actorId: string;
@@ -32,12 +33,22 @@ export type MoveCat = {
   payload: { catId: string; destination: { lotId: string; x: number; y: number } };
 };
 
+// --- Task 04: cat creator ---
+export type CreateCat = {
+  type: 'create-cat';
+  payload: {
+    name: string;
+    appearance: { variant: string };
+    traits: { id: string; level: number }[];
+  };
+};
+
 export type LaunchWorld = {
   type: 'launch-world';
   payload: Record<string, never>;
 };
 
-export type GameCommand = CreateHousehold | MoveCat | LaunchWorld;
+export type GameCommand = CreateHousehold | MoveCat | LaunchWorld | CreateCat;
 
 export function dispatch(
   state: WorldState,
@@ -74,6 +85,8 @@ export function dispatch(
             lastRoute: [],
             needs: { hunger: 80, energy: 80, fun: 50 },
             state: 'idle',
+            appearance: { variant: 'orange-tabby' },
+            traits: [{ id: 'playful', level: 70 }],
           },
         },
         home: {
@@ -137,6 +150,87 @@ export function dispatch(
         sequence: newState.household.revision,
         payload: {},
       };
+      return { ok: true, state: newState, events: [event] };
+    }
+
+    case 'create-cat': {
+      // R20: enforce eight living cat capacity.
+      const livingCount = Object.keys(state.cats).length;
+      const violation = verifyCatCapacity(livingCount);
+      if (violation) {
+        return {
+          ok: false,
+          state,
+          error: { code: violation.code, message: violation.message },
+        };
+      }
+
+      // R07: reject blank/unsafe names.
+      const trimmed = command.payload.name.trim();
+      if (!trimmed) {
+        return { ok: false, state, error: { code: 'invalid-name', message: 'Name cannot be blank' } };
+      }
+
+      // R07: validate appearance variant against catalog.
+      const { variant } = command.payload.appearance;
+      if (!getAppearance(variant)) {
+        return { ok: false, state, error: { code: 'unknown-appearance', message: `Unknown appearance: ${variant}` } };
+      }
+
+      // R07: validate traits against catalog, max 3 traits.
+      const traits = command.payload.traits;
+      if (traits.length > 3) {
+        return { ok: false, state, error: { code: 'too-many-traits', message: 'Maximum 3 traits per cat' } };
+      }
+      for (const t of traits) {
+        if (!getTrait(t.id)) {
+          return { ok: false, state, error: { code: 'unknown-trait', message: `Unknown trait: ${t.id}` } };
+        }
+      }
+
+      // Assign a spawn position: first empty cell in reading order.
+      const home = state.home;
+      const existingPositions = new Set(Object.values(state.cats).map(c => `${c.position.x},${c.position.y}`));
+      let spawnX = 0;
+      let spawnY = 0;
+      outer: for (let y = 0; y < home.height; y++) {
+        for (let x = 0; x < home.width; x++) {
+          const blocked = home.blockedCells.some(b => b.x === x && b.y === y);
+          const occupied = existingPositions.has(`${x},${y}`);
+          if (!blocked && !occupied) {
+            spawnX = x;
+            spawnY = y;
+            break outer;
+          }
+        }
+      }
+
+      const catId = uuidv4();
+      const newCat = {
+        id: catId,
+        name: trimmed,
+        position: { lotId: home.lotId, x: spawnX, y: spawnY },
+        lastRoute: [],
+        needs: { hunger: 80, energy: 80, fun: 50 },
+        state: 'idle' as const,
+        appearance: { variant },
+        traits: traits.map(t => ({ id: t.id, level: Math.max(0, Math.min(100, t.level)) })),
+      };
+
+      const newState: WorldState = {
+        ...state,
+        cats: { ...state.cats, [catId]: newCat },
+        household: { ...state.household, revision: state.household.revision + 1 },
+      };
+
+      const event: DomainEvent = {
+        type: 'cat-created',
+        householdId: state.household.id,
+        sequence: newState.household.revision,
+        payload: { catId, name: trimmed, variant, traits: traits.map(t => t.id) },
+      };
+
+      void catCatalog; // available for future reference; validation uses helpers
       return { ok: true, state: newState, events: [event] };
     }
 

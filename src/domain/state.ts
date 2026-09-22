@@ -21,13 +21,24 @@ export type Position = {
 };
 
 /** A cat in the household. */
+export type CatAppearance = {
+  variant: string; // canonical catalog ID (e.g. "orange-tabby")
+};
+
+export type CatTrait = {
+  id: string;    // canonical catalog ID (e.g. "playful")
+  level: number; // 0–100
+};
+
 export type Cat = {
-  id: string;               // stable id (e.g. "mochi")
-  name: string;             // display name
+  id: string;               // stable id (e.g. "mochi" or a UUID)
+  name: string;             // display name (Unicode supported)
   position: Position;       // current cell
   lastRoute: Position[];    // cells traversed on last completed move
   needs: { hunger: number; energy: number; fun: number };
   state: 'idle' | 'moving' | 'sleeping';
+  appearance: CatAppearance; // NEW: coat/color variant
+  traits: CatTrait[];       // NEW: personality traits
 };
 
 /** The home lot: a grid with blocked cells (walls, furniture). */

@@ -27,6 +27,8 @@ export type CommittedView = {
       lastRoute: { lotId: string; x: number; y: number }[];
       needs: { hunger: number; energy: number; fun: number };
       state: string;
+      appearance: { variant: string };
+      traits: { id: string; level: number }[];
     }>;
     home: {
       lotId: string;
@@ -60,7 +62,7 @@ function fixtureOwner(name: string): string {
 export async function openScenario(
   page: Page,
   name: string,
-  options?: { autoCreateAndLaunch?: boolean }
+  options?: { autoCreateAndLaunch?: boolean; autoCreate?: boolean }
 ): Promise<{ householdId: string; token: string }> {
   const ownerId = fixtureOwner(name);
 
@@ -94,7 +96,7 @@ export async function openScenario(
       data: JSON.stringify({ name: `Home of ${name}` }),
       headers: {
         'Content-Type': 'application/json',
-        authorization: `Bearer ${token}`,
+        authorization: `Bearer ${token}`
       },
     });
     if (!createRes.ok()) {
@@ -109,13 +111,28 @@ export async function openScenario(
       data: JSON.stringify({ type: 'launch-world', payload: {} }),
       headers: {
         'Content-Type': 'application/json',
-        authorization: `Bearer ${token}`,
+        authorization: `Bearer ${token}`
       },
     });
     if (!launchRes.ok()) {
       const body = await launchRes.text();
       throw new Error(`openScenario: launch-world failed ${launchRes.status()}: ${body.slice(0, 200)}`);
     }
+  } else if (options?.autoCreate) {
+    // Just create household, don't launch.
+    const createRes = await page.request.post(`${DEV_BASE}/api/households`, {
+      data: JSON.stringify({ name: `Home of ${name}` }),
+      headers: {
+        'Content-Type': 'application/json',
+        authorization: `Bearer ${token}`
+      },
+    });
+    if (!createRes.ok()) {
+      const body = await createRes.text();
+      throw new Error(`openScenario: create-household failed ${createRes.status()}: ${body.slice(0, 200)}`);
+    }
+    const createData = (await createRes.json()) as { householdId: string };
+    householdId = createData.householdId;
   }
 
   await page.goto('/game');

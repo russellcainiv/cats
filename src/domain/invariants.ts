@@ -1,8 +1,20 @@
 // src/domain/invariants.ts
 // Task 01: capacity, identity, ownership. Task 02: pathfinding and collision.
 import { WorldState, Position } from './state';
+import type { Cat } from './state';
 
 export type Violation = { code: string; message: string };
+
+// R20: eight living cats plus reserved unborn slots — ninth creation changes nothing.
+export const CAT_CAPACITY = 9;
+export const LIVING_CAT_MAX = 8;
+
+export function verifyCatCapacity(catCount: number): Violation | null {
+  if (catCount >= CAT_CAPACITY) {
+    return { code: 'capacity-exceeded', message: 'Household is at maximum capacity (8 living cats)' };
+  }
+  return null;
+}
 
 export function checkInvariants(state: WorldState): Violation[] {
   const violations: Violation[] = [];

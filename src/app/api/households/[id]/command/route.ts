@@ -43,7 +43,8 @@ export async function POST(request: Request) {
   const result = dispatch(state, command, { actorId: identity.ownerId, commandId: body.idempotencyKey ?? `cmd-${Date.now()}` });
 
   if (!result.ok) {
-    return NextResponse.json({ error: result.error.code, message: result.error.message }, { status: 422 });
+    const status = result.error.code === 'capacity-exceeded' ? 409 : 422;
+    return NextResponse.json({ error: result.error.code, message: result.error.message }, { status });
   }
 
   // Persist the new state.

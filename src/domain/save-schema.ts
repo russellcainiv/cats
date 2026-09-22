@@ -1,11 +1,16 @@
 // src/domain/save-schema.ts
 // Persistence envelope and migration. Task 01: v1 household only.
 // Task 02: extended to v2 with cats, home, simMinute — migrates v1 forward.
+// Task 04: extended to v3 with cat appearance + traits — migrates v1/v2 forward.
 
 import { WorldState } from './state';
-import type { Cat, Home } from './state';
+import type { Cat, Home, CatAppearance, CatTrait } from './state';
+import { catCatalog } from '@/content/cat-catalog';
 
-export const SCHEMA_VERSION = 2;
+// Re-export for convenient import from domain layer.
+export { catCatalog };
+
+export const SCHEMA_VERSION = 3;
 
 // The persisted envelope for a household. v2 adds cats/home/simMinute.
 export type SaveEnvelope = {
@@ -38,11 +43,26 @@ export function migrateEnvelope(env: SaveEnvelope): Pick<WorldState, 'cats' | 'h
     };
   }
   return {
-    cats: env.cats ?? defaultCats(env.household.seed),
+    cats: migrateCats(env.cats ?? defaultCats(env.household.seed), env.schemaVersion),
     home: env.home ?? defaultHome(env.household.seed),
     simMinute: env.simMinute ?? 0,
     paused: env.paused ?? false,
   };
+}
+
+// CATS-5: migrate cats to include appearance + traits (v3). Cats loaded from
+// v1/v2 snapshots lack these fields — backfill with defaults.
+function migrateCats(cats: Record<string, Cat>, schemaVersion: number): Record<string, Cat> {
+  if (schemaVersion >= 3) return cats;
+  const migrated: Record<string, Cat> = {};
+  for (const [id, cat] of Object.entries(cats)) {
+    migrated[id] = {
+      ...cat,
+      appearance: cat.appearance ?? { variant: 'orange-tabby' },
+      traits: cat.traits ?? [],
+    };
+  }
+  return migrated;
 }
 
 export function defaultCats(seed: string): Record<string, Cat> {
@@ -55,6 +75,8 @@ export function defaultCats(seed: string): Record<string, Cat> {
       lastRoute: [],
       needs: { hunger: 80, energy: 80, fun: 50 },
       state: 'idle',
+      appearance: { variant: 'orange-tabby' },
+      traits: [{ id: 'playful', level: 70 }],
     },
   };
 }
