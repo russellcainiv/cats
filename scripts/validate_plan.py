@@ -14,29 +14,47 @@ def read(name):
     assert path.is_file(), f"Missing file: {name}"
     return path.read_text()
 
-def graph_errors(tickets, requirements):
+def _check_duplicates(tickets):
     errors = []
     ids = [t['id'] for t in tickets]
     if len(ids) != len(set(ids)):
         errors.append('duplicate ticket ID')
-    known = set(ids)
-    req_ids = {r['id'] for r in requirements}
-    covered = set()
-    by_id = {t['id']: t for t in tickets}
+    return errors
+
+def _check_criteria(tickets):
+    errors = []
     for t in tickets:
         if not t.get('criteria') or len(t['criteria']) < 4:
             errors.append(f"ticket {t['id']} lacks acceptance criteria")
+    return errors
+
+def _check_dependencies(tickets):
+    errors = []
+    known = {t['id'] for t in tickets}
+    for t in tickets:
         for dep in t['depends']:
             if dep not in known:
                 errors.append(f"ticket {t['id']} missing dependency {dep}")
             elif dep >= t['id']:
                 errors.append(f"ticket {t['id']} not in dependency order")
+    return errors
+
+def _check_requirements(tickets, requirements):
+    errors = []
+    req_ids = {r['id'] for r in requirements}
+    covered = set()
+    for t in tickets:
         for req in t['requirements']:
             if req not in req_ids:
                 errors.append(f"unknown requirement {req}")
             covered.add(req)
     for req in sorted(req_ids - covered):
         errors.append(f"uncovered requirement {req}")
+    return errors
+
+def _check_cycles(tickets):
+    errors = []
+    by_id = {t['id']: t for t in tickets}
     visiting, done = set(), set()
     def visit(node):
         if node in visiting:
@@ -49,8 +67,18 @@ def graph_errors(tickets, requirements):
             visit(dep)
         visiting.remove(node)
         done.add(node)
-    for node in ids:
-        visit(node)
+
+    for t in tickets:
+        visit(t['id'])
+    return errors
+
+def graph_errors(tickets, requirements):
+    errors = []
+    errors.extend(_check_duplicates(tickets))
+    errors.extend(_check_criteria(tickets))
+    errors.extend(_check_dependencies(tickets))
+    errors.extend(_check_requirements(tickets, requirements))
+    errors.extend(_check_cycles(tickets))
     return errors
 
 def load():
