@@ -19,11 +19,14 @@ def command(args):
 def api(path, *args):
     return json.loads(command(['gh', 'api', path, *args]))
 
+def load_tickets():
+    return json.loads((ROOT/'docs/tickets.json').read_text())['tickets']
+
 def existing():
     return {i['title']: i for i in api(f'repos/{REPO}/issues?state=all&per_page=100') if 'pull_request' not in i}
 
 def specs():
-    manifest = json.loads((ROOT/'docs/tickets.json').read_text())['tickets']
+    manifest = load_tickets()
     result = [{'key':'spec','title':'Cats — complete game specification and implementation roadmap','body':'.scratch/cats/publish/spec.md','labels':['kind:spec','ready-for-agent','priority:high','area:simulation','area:building','area:art','area:platform','area:ux','area:content']}]
     for t in manifest:
         n=t['id']; area='area:simulation'
@@ -61,7 +64,7 @@ def registry():
 
 def relations():
     mapping=registry()['github']
-    data=json.loads((ROOT/'docs/tickets.json').read_text())['tickets']
+    data=load_tickets()
     for parent_key,children in [('spec',[f'task-{t["id"]:02d}' for t in data]),('map',['01-recipient','02-balance','03-phone-art'])]:
         parent=mapping[parent_key]
         old={i['id'] for i in api(f'repos/{REPO}/issues/{parent["number"]}/sub_issues?per_page=100')}
@@ -82,7 +85,7 @@ def relations():
         print('dependencies verified',t['id'],len(t['depends']),flush=True)
 
 def verify():
-    found=existing(); mapping=registry()['github']; data=json.loads((ROOT/'docs/tickets.json').read_text())['tickets']
+    found=existing(); mapping=registry()['github']; data=load_tickets()
     for item in specs():
         issue=found[item['title']]
         labels={l['name'] for l in issue['labels']}
