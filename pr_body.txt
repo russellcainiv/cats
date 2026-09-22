@@ -1,0 +1,10 @@
+🎯 **What:**
+Added unit tests for the untested `command` function in `scripts/publish_issues.py`. This was done by mocking `subprocess.run` to ensure fast and isolated test execution.
+
+📊 **Coverage:**
+- Happy path returning standard output (exit code 0).
+- Error path raising `RuntimeError` on non-zero exit codes.
+- Error message truncation, validating that the combined stdout/stderr output is truncated to 1800 characters when the message exceeds this limit.
+
+✨ **Result:**
+Achieved 100% test coverage for the `command` function.
