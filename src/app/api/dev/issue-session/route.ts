@@ -16,5 +16,13 @@ export async function POST(request: Request) {
   const householdId = body.householdId ?? null;
   const token = await issueDevToken(ownerId, householdId);
 
-  return NextResponse.json({ token, ownerId, householdId });
+  const response = NextResponse.json({ token, ownerId, householdId });
+  // Set the session cookie so client-side auto-session works in dev.
+  response.cookies.set('cats-session', token, {
+    httpOnly: true,
+    path: '/',
+    maxAge: 7 * 24 * 60 * 60, // 7 days
+    sameSite: 'lax',
+  });
+  return response;
 }
