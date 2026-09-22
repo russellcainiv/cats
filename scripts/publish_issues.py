@@ -22,18 +22,25 @@ def api(path, *args):
 def existing():
     return {i['title']: i for i in api(f'repos/{REPO}/issues?state=all&per_page=100') if 'pull_request' not in i}
 
+TASK_AREAS = {
+    1: 'area:platform', 3: 'area:platform', 29: 'area:platform', 32: 'area:platform',
+    7: 'area:building', 8: 'area:building', 9: 'area:building', 10: 'area:building',
+    15: 'area:content', 16: 'area:content', 24: 'area:content',
+    26: 'area:ux', 28: 'area:ux',
+    27: 'area:art',
+    30: 'area:qa', 31: 'area:qa'
+}
+
+HIGH_PRIORITY_TASKS = frozenset([1, 3, 19, 21, 29, 31, 32])
+
 def specs():
     manifest = json.loads((ROOT/'docs/tickets.json').read_text())['tickets']
     result = [{'key':'spec','title':'Cats — complete game specification and implementation roadmap','body':'.scratch/cats/publish/spec.md','labels':['kind:spec','ready-for-agent','priority:high','area:simulation','area:building','area:art','area:platform','area:ux','area:content']}]
     for t in manifest:
-        n=t['id']; area='area:simulation'
-        if n in [1,3,29,32]: area='area:platform'
-        if n in [7,8,9,10]: area='area:building'
-        if n in [15,16,24]: area='area:content'
-        if n in [26,28]: area='area:ux'
-        if n==27: area='area:art'
-        if n in [30,31]: area='area:qa'
-        result.append({'key':f'task-{n:02d}','title':f"[Cats {n:02d}] {t['title']}",'body':f".scratch/cats/publish/{n:02d}-{t['slug']}.md",'labels':['kind:feature','ready-for-agent',area,'priority:high' if n in [1,3,19,21,29,31,32] else 'priority:normal']})
+        n = t['id']
+        area = TASK_AREAS.get(n, 'area:simulation')
+        priority = 'priority:high' if n in HIGH_PRIORITY_TASKS else 'priority:normal'
+        result.append({'key':f'task-{n:02d}','title':f"[Cats {n:02d}] {t['title']}",'body':f".scratch/cats/publish/{n:02d}-{t['slug']}.md",'labels':['kind:feature','ready-for-agent',area,priority]})
     result.append({'key':'map','title':'Cats — decisions to validate during implementation','body':'.scratch/cats/publish/map.md','labels':['wayfinder:map','needs-info','priority:normal']})
     for slug,title,kind in [('01-recipient','Personalize the gift using her real cats','grilling'),('02-balance','Validate the fixed lifespan and household economy','prototype'),('03-phone-art','Approve the playable phone composition','prototype')]:
         result.append({'key':slug,'title':title,'body':f'.scratch/cats/decisions/{slug}.md','labels':['wayfinder:'+kind,'needs-info','priority:normal']})
