@@ -124,14 +124,25 @@ def self_test():
     reqs, data = load()
     assert not graph_errors(data, reqs)
     cases = []
-    broken = copy.deepcopy(data); broken.append(copy.deepcopy(broken[0])); cases.append(broken)
-    broken = copy.deepcopy(data); broken[1]['depends'] = [999]; cases.append(broken)
-    broken = copy.deepcopy(data); broken[0]['depends'] = [2]; cases.append(broken)
     broken = copy.deepcopy(data)
-    for t in broken: t['requirements'] = [r for r in t['requirements'] if r != 'R25']
+    broken.append(copy.deepcopy(broken[0]))
     cases.append(broken)
-    broken = copy.deepcopy(data); broken[0]['criteria'] = []; cases.append(broken)
-    broken = copy.deepcopy(data); broken[0]['requirements'].append('R999'); cases.append(broken)
+    broken = copy.deepcopy(data)
+    broken[1]['depends'] = [999]
+    cases.append(broken)
+    broken = copy.deepcopy(data)
+    broken[0]['depends'] = [2]
+    cases.append(broken)
+    broken = copy.deepcopy(data)
+    for t in broken:
+        t['requirements'] = [r for r in t['requirements'] if r != 'R25']
+    cases.append(broken)
+    broken = copy.deepcopy(data)
+    broken[0]['criteria'] = []
+    cases.append(broken)
+    broken = copy.deepcopy(data)
+    broken[0]['requirements'].append('R999')
+    cases.append(broken)
     assert all(graph_errors(c, reqs) for c in cases), 'Validator accepted a broken manifest'
     print(f'PASS self-test: {len(cases)} malformed manifests rejected')
 
