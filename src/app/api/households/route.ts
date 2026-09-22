@@ -24,10 +24,11 @@ export async function POST(request: Request) {
     return NextResponse.json({
       schemaVersion: SCHEMA_VERSION,
       householdId: h.id,
-      household: { id: h.id, ownerId: h.ownerId, name: h.name, seed: h.seed, revision: h.revision, createdAt: h.createdAt, launched: h.launched },
+      household: { id: h.id, ownerId: h.ownerId, name: h.name, seed: h.seed, revision: h.revision, createdAt: h.createdAt, launched: h.launched, leaseEpoch: h.leaseEpoch ?? 0 },
       cats: h.cats ?? defaultCats(h.seed),
       home: h.home ?? defaultHome(h.seed),
       simMinute: h.simMinute ?? 0,
+      paused: h.paused ?? false,
       checksum: h.checksum,
     }, { status: 200 });
   }
@@ -35,10 +36,11 @@ export async function POST(request: Request) {
   // Dispatch through the real domain command boundary.
   const commandId = uuidv4();
   const emptyState: WorldState = {
-    household: { id: '', ownerId: '', name: '', seed: '', revision: 0, createdAt: 0, launched: false },
+    household: { id: '', ownerId: '', name: '', seed: '', revision: 0, createdAt: 0, launched: false, leaseEpoch: 0 },
     cats: {},
     home: { lotId: '', width: 0, height: 0, blockedCells: [] },
     simMinute: 0,
+    paused: false,
   };
   const result = dispatch(emptyState, { type: 'create-household', payload: { name } }, {
     actorId: identity.ownerId,
@@ -54,6 +56,8 @@ export async function POST(request: Request) {
     id: h.id, ownerId: h.ownerId, name: h.name, seed: h.seed,
     revision: h.revision, createdAt: h.createdAt,
     launched: result.state.household.launched,
+    leaseEpoch: result.state.household.leaseEpoch,
+    paused: result.state.paused,
     cats: result.state.cats,
     home: result.state.home,
     simMinute: result.state.simMinute,
@@ -67,6 +71,7 @@ export async function POST(request: Request) {
     cats: saved.cats,
     home: saved.home,
     simMinute: saved.simMinute,
+    paused: saved.paused,
     checksum: '',
   };
   envelope.checksum = computeChecksum(envelope);
@@ -78,10 +83,11 @@ export async function POST(request: Request) {
     {
       schemaVersion: SCHEMA_VERSION,
       householdId: saved.id,
-      household: { id: saved.id, ownerId: saved.ownerId, name: saved.name, seed: saved.seed, revision: saved.revision, createdAt: saved.createdAt, launched: saved.launched },
+      household: { id: saved.id, ownerId: saved.ownerId, name: saved.name, seed: saved.seed, revision: saved.revision, createdAt: saved.createdAt, launched: saved.launched, leaseEpoch: saved.leaseEpoch },
       cats: saved.cats,
       home: saved.home,
       simMinute: saved.simMinute,
+      paused: saved.paused,
       checksum: saved.checksum,
     },
     { status: 201 }

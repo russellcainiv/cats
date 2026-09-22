@@ -22,23 +22,26 @@ export type SaveEnvelope = {
   cats?: Record<string, Cat>;
   home?: Home;
   simMinute?: number;
+  paused?: boolean;
   checksum: string;
 };
 
 // Migration: extract cats/home/simMinute from envelope, providing v2 defaults
 // when loading a v1 household that predates these fields.
-export function migrateEnvelope(env: SaveEnvelope): Pick<WorldState, 'cats' | 'home' | 'simMinute'> {
+export function migrateEnvelope(env: SaveEnvelope): Pick<WorldState, 'cats' | 'home' | 'simMinute' | 'paused'> {
   if (env.schemaVersion < 2) {
     return {
       cats: defaultCats(env.household.seed),
       home: defaultHome(env.household.seed),
       simMinute: 0,
+      paused: false,
     };
   }
   return {
     cats: env.cats ?? defaultCats(env.household.seed),
     home: env.home ?? defaultHome(env.household.seed),
     simMinute: env.simMinute ?? 0,
+    paused: env.paused ?? false,
   };
 }
 

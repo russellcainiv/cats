@@ -10,6 +10,7 @@ export type Household = {
   revision: number;    // CAS revision, monotonically increasing
   createdAt: number;   // epoch ms
   launched: boolean;   // true when the world has been entered (cats visible)
+  leaseEpoch: number;  // server-issued lease epoch; stale saves rejected
 };
 
 /** A cell coordinate within a lot. */
@@ -42,6 +43,7 @@ export type WorldState = {
   cats: Record<string, Cat>;
   home: Home;
   simMinute: number;      // simulation time in minutes
+  paused: boolean;        // simulation paused (no time advances while away)
 };
 
 export type GameState = WorldState;

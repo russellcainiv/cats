@@ -11,6 +11,7 @@ export type GameView = {
     revision: number;
     createdAt: number;
     launched: boolean;
+    leaseEpoch: number;
   };
   cats: Record<string, {
     id: string;
@@ -27,6 +28,7 @@ export type GameView = {
     blockedCells: { lotId: string; x: number; y: number }[];
   };
   simMinute: number;
+  paused: boolean;
 };
 
 export function selectView(state: WorldState): GameView {
@@ -39,9 +41,11 @@ export function selectView(state: WorldState): GameView {
       revision: state.household.revision,
       createdAt: state.household.createdAt,
       launched: state.household.launched,
+      leaseEpoch: state.household.leaseEpoch,
     },
     cats: state.cats,
     home: state.home,
     simMinute: state.simMinute,
+    paused: state.paused,
   };
 }

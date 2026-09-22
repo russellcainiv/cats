@@ -64,6 +64,7 @@ export function dispatch(
           revision: 1,
           createdAt: Date.now(),
           launched: false,
+          leaseEpoch: 0,
         },
         cats: {
           mochi: {
@@ -82,6 +83,7 @@ export function dispatch(
           blockedCells: [{ lotId: 'home', x: 4, y: 3 }],
         },
         simMinute: 0,
+        paused: false,
       };
       const event: DomainEvent = {
         type: 'household-created',

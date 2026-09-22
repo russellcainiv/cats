@@ -19,10 +19,14 @@ type StoredHousehold = {
   checksum: string;
   createdAt: number;
   launched: boolean;
+  leaseEpoch: number;   // server-managed; NOT part of checksum
+  paused: boolean;      // game state; IS part of checksum
   // v2 additions (may be absent on v1 households — caller migrates)
   cats?: WorldState['cats'];
   home?: WorldState['home'];
   simMinute?: number;
+  // Idempotency log: requestId → result (prevents double-writes on retry).
+  processedRequests?: Record<string, { revision: number; checksum: string }>;
 };
 
 type DBState = {
@@ -67,8 +71,25 @@ export function upsertHousehold(h: StoredHousehold): StoredHousehold {
   if (idx >= 0) db.households[idx] = h;
   else db.households.push(h);
   writeFileSync(DB_FILE, JSON.stringify(db, null, 2), 'utf-8');
-  // Return a fresh copy to prevent mutation of the cached reference.
   return { ...h };
+}
+
+// Idempotency: record and look up processed save requests. Prevents
+// double-writes when a client retries after a lost response.
+type ProcessedResult = { revision: number; checksum: string };
+
+export function findProcessedRequest(householdId: string, requestId: string): ProcessedResult | null {
+  const h = findHousehold(householdId);
+  if (!h || !h.processedRequests) return null;
+  return h.processedRequests[requestId] ?? null;
+}
+
+export function recordProcessedRequest(householdId: string, requestId: string, result: ProcessedResult): void {
+  const h = findHousehold(householdId);
+  if (!h) return;
+  if (!h.processedRequests) h.processedRequests = {};
+  h.processedRequests[requestId] = result;
+  upsertHousehold(h);
 }
 
 export type { StoredHousehold };

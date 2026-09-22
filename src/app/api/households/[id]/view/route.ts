@@ -27,10 +27,11 @@ export async function GET(request: Request) {
   }
 
   const state: WorldState = {
-    household: { id: h.id, ownerId: h.ownerId, name: h.name, seed: h.seed, revision: h.revision, createdAt: h.createdAt, launched: h.launched ?? false },
+    household: { id: h.id, ownerId: h.ownerId, name: h.name, seed: h.seed, revision: h.revision, createdAt: h.createdAt, launched: h.launched ?? false, leaseEpoch: h.leaseEpoch ?? 0 },
     cats: h.cats ?? defaultCats(h.seed),
     home: h.home ?? defaultHome(h.seed),
     simMinute: h.simMinute ?? 0,
+    paused: h.paused ?? false,
   };
 
   return NextResponse.json({

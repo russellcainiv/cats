@@ -18,6 +18,7 @@ export type CommittedView = {
       revision: number;
       createdAt: number;
       launched: boolean;
+      leaseEpoch: number;
     };
     cats: Record<string, {
       id: string;
@@ -34,6 +35,7 @@ export type CommittedView = {
       blockedCells: { lotId: string; x: number; y: number }[];
     };
     simMinute: number;
+    paused: boolean;
   };
 };
 

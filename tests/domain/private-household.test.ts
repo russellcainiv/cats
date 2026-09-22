@@ -11,10 +11,11 @@ import { v4 as uuidv4 } from 'uuid';
 
 function emptyState(): WorldState {
   return {
-    household: { id: '', ownerId: '', name: '', seed: '', revision: 0, createdAt: 0, launched: false },
+    household: { id: '', ownerId: '', name: '', seed: '', revision: 0, createdAt: 0, launched: false, leaseEpoch: 0 },
     cats: {},
     home: { lotId: '', width: 0, height: 0, blockedCells: [] },
     simMinute: 0,
+    paused: false,
   };
 }
 

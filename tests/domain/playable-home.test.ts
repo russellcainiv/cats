@@ -18,10 +18,12 @@ function seededState(): WorldState {
       revision: 1,
       createdAt: Date.now(),
       launched: false,
+      leaseEpoch: 0,
     },
     cats: defaultCats('test-seed'),
     home: defaultHome('test-seed'),
     simMinute: 0,
+    paused: false,
   };
 }
 
@@ -105,10 +107,11 @@ describe('launch-world command', () => {
 
   it('rejects launch without a household', () => {
     const state: WorldState = {
-      household: { id: '', ownerId: '', name: '', seed: '', revision: 0, createdAt: 0, launched: false },
+      household: { id: '', ownerId: '', name: '', seed: '', revision: 0, createdAt: 0, launched: false, leaseEpoch: 0 },
       cats: {},
       home: { lotId: '', width: 0, height: 0, blockedCells: [] },
       simMinute: 0,
+      paused: false,
     };
     const result = dispatch(state, { type: 'launch-world', payload: {} }, {
       actorId: '',

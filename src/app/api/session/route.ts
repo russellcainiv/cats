@@ -18,5 +18,6 @@ export async function GET(request: Request) {
     ownerId: identity.ownerId,
     householdId: household?.id ?? null,
     launched: household?.launched ?? false,
+    leaseEpoch: household?.leaseEpoch ?? 0,
   });
 }
