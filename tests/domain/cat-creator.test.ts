@@ -49,11 +49,10 @@ describe('cat creator — domain', () => {
     expect(result.events[0].type).toBe('cat-created');
   });
 
-  it('enforces capacity — tenth creation is rejected (CATS-5 R20)', () => {
+  it('enforces capacity — ninth creation is rejected (CATS-5 R20)', () => {
     const state = emptyState();
     let current = state;
-    // 8 living cats plus reserved unborn slot = 9 total capacity.
-    for (let i = 0; i < 9; i++) {
+    for (let i = 0; i < 8; i++) {
       const result = dispatch(current, {
         type: 'create-cat',
         payload: {
@@ -67,20 +66,20 @@ describe('cat creator — domain', () => {
       current = result.state;
     }
 
-    // Tenth attempt should fail (capacity-exceeded).
-    const tenth = dispatch(current, {
+    // Ninth attempt should fail (capacity-exceeded — changes nothing).
+    const ninth = dispatch(current, {
       type: 'create-cat',
       payload: {
-        name: 'Tenth Cat',
+        name: 'Ninth Cat',
         appearance: { variant: 'orange-tabby' },
         traits: [],
       },
-    }, { actorId: 'test-owner', commandId: 'cmd-10' });
-    expect(tenth.ok).toBe(false);
-    if (tenth.ok) return;
-    expect(tenth.error.code).toBe('capacity-exceeded');
+    }, { actorId: 'test-owner', commandId: 'cmd-9' });
+    expect(ninth.ok).toBe(false);
+    if (ninth.ok) return;
+    expect(ninth.error.code).toBe('capacity-exceeded');
     // No new cat added — ninth creation changed nothing.
-    expect(Object.keys(tenth.state.cats)).toHaveLength(9);
+    expect(Object.keys(ninth.state.cats)).toHaveLength(8);
   });
 
   it('rejects blank names', () => {

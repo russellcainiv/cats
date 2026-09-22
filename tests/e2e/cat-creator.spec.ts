@@ -76,10 +76,9 @@ test.describe('CATS-5: cat creator', () => {
   test('capacity enforced — eighth new cat succeeds, ninth fails', async ({ page }) => {
     const { householdId, token } = await openScenario(page, 'cat-creator-capacity', { autoCreate: true });
 
-    // Create 8 cats directly via API (faster than UI for bulk).
-    // Start with 1 (Mochi), create 8 more = 9 total (CAT_CAPACITY).
+    // Start with 1 cat (Mochi). Create 7 more to reach 8 (R20 max living cats).
     let revision = (await readCommittedView(page, householdId)).revision;
-    for (let i = 1; i <= 8; i++) {
+    for (let i = 1; i <= 7; i++) {
       const res = await page.request.post(`${DEV_BASE}/api/households/${householdId}/command`, {
         data: JSON.stringify({
           type: 'create-cat',
@@ -95,18 +94,18 @@ test.describe('CATS-5: cat creator', () => {
         },
       });
       expect(res.status()).toBe(200);
-      // Wait for the commit to be visible.
       const view = await waitForCommit(page, householdId, revision);
       expect(Object.keys(view.view.cats).length).toBe(i + 1);
       revision = view.revision;
     }
 
-    // Now at 9 cats — reload page so the UI picks up the new count.
+    // Now at 8 cats — reload so the UI reflects the updated count.
     await page.reload();
+    await page.waitForSelector('[data-testid="create-cat-btn"]', { timeout: 10000 });
     await expect(page.locator('[data-testid="create-cat-btn"]')).toBeDisabled();
     await expect(page.locator('text=/Maximum.*cats reached/i')).toBeVisible();
 
-    // Attempting a tenth via API should fail with capacity-exceeded (409).
+    // Attempting an eighth new cat (ninth total) via API should fail with 409.
     const res = await page.request.post(`${DEV_BASE}/api/households/${householdId}/command`, {
       data: JSON.stringify({
         type: 'create-cat',

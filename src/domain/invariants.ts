@@ -5,8 +5,8 @@ import type { Cat } from './state';
 
 export type Violation = { code: string; message: string };
 
-// R20: eight living cats plus reserved unborn slots — ninth creation changes nothing.
-export const CAT_CAPACITY = 9;
+// R20: eight living cats plus reserved unborn slots; ninth creation changes nothing.
+export const CAT_CAPACITY = 8;
 export const LIVING_CAT_MAX = 8;
 
 export function verifyCatCapacity(catCount: number): Violation | null {
