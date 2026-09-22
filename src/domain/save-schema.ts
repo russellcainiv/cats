@@ -1,9 +1,13 @@
 // src/domain/save-schema.ts
-// Task 01: Persistence envelope and migration.
-// Real persistence contract; not a mock.
+// Persistence envelope and migration. Task 01: v1 household only.
+// Task 02: extended to v2 with cats, home, simMinute — migrates v1 forward.
 
-export const SCHEMA_VERSION = 1;
+import { WorldState } from './state';
+import type { Cat, Home } from './state';
 
+export const SCHEMA_VERSION = 2;
+
+// The persisted envelope for a household. v2 adds cats/home/simMinute.
 export type SaveEnvelope = {
   schemaVersion: number;
   household: {
@@ -13,15 +17,58 @@ export type SaveEnvelope = {
     seed: string;
     revision: number;
     createdAt: number;
+    launched: boolean;
   };
+  cats?: Record<string, Cat>;
+  home?: Home;
+  simMinute?: number;
   checksum: string;
 };
 
+// Migration: extract cats/home/simMinute from envelope, providing v2 defaults
+// when loading a v1 household that predates these fields.
+export function migrateEnvelope(env: SaveEnvelope): Pick<WorldState, 'cats' | 'home' | 'simMinute'> {
+  if (env.schemaVersion < 2) {
+    return {
+      cats: defaultCats(env.household.seed),
+      home: defaultHome(env.household.seed),
+      simMinute: 0,
+    };
+  }
+  return {
+    cats: env.cats ?? defaultCats(env.household.seed),
+    home: env.home ?? defaultHome(env.household.seed),
+    simMinute: env.simMinute ?? 0,
+  };
+}
+
+export function defaultCats(seed: string): Record<string, Cat> {
+  void seed;
+  return {
+    mochi: {
+      id: 'mochi',
+      name: 'Mochi',
+      position: { lotId: 'home', x: 6, y: 4 },
+      lastRoute: [],
+      needs: { hunger: 80, energy: 80, fun: 50 },
+      state: 'idle',
+    },
+  };
+}
+
+export function defaultHome(seed: string): Home {
+  void seed;
+  return {
+    lotId: 'home',
+    width: 8,
+    height: 6,
+    blockedCells: [{ lotId: 'home', x: 4, y: 3 }],
+  };
+}
+
 export function computeChecksum(env: SaveEnvelope): string {
-  // Real checksum of the persisted payload (excludes the checksum field).
   const { checksum: _omit, ...payload } = env;
   const json = JSON.stringify(payload);
-  // Simple deterministic hash for dev; replaces with crypto in production.
   let hash = 0;
   for (let i = 0; i < json.length; i++) {
     const c = json.charCodeAt(i);

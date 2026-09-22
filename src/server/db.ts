@@ -1,10 +1,11 @@
 // src/server/db.ts
 // Real development adapter for household persistence.
 // Swaps in Neon Postgres for production; the interface is identical.
-// Uses a local JSON file store with fs locking. Not a mock: real disk persistence.
+// Now stores full WorldState (cats, home, simMinute), not just household metadata.
 
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'fs';
 import { join } from 'path';
+import type { WorldState } from '@/domain/state';
 
 const DB_DIR = join(process.cwd(), '.scratch', 'runtime', 'db');
 const DB_FILE = join(DB_DIR, 'dev-households.json');
@@ -17,6 +18,11 @@ type StoredHousehold = {
   revision: number;
   checksum: string;
   createdAt: number;
+  launched: boolean;
+  // v2 additions (may be absent on v1 households — caller migrates)
+  cats?: WorldState['cats'];
+  home?: WorldState['home'];
+  simMinute?: number;
 };
 
 type DBState = {
@@ -35,7 +41,6 @@ function ensureDb(): DBState {
     const parsed = JSON.parse(raw);
     if (parsed && Array.isArray(parsed.households)) return parsed;
   } catch {
-    // corrupt: quarantine and start fresh
     const quarantine = DB_FILE + '.corrupt-' + Date.now();
     try {
       writeFileSync(quarantine, readFileSync(DB_FILE, 'utf-8'), 'utf-8');
@@ -62,7 +67,8 @@ export function upsertHousehold(h: StoredHousehold): StoredHousehold {
   if (idx >= 0) db.households[idx] = h;
   else db.households.push(h);
   writeFileSync(DB_FILE, JSON.stringify(db, null, 2), 'utf-8');
-  return h;
+  // Return a fresh copy to prevent mutation of the cached reference.
+  return { ...h };
 }
 
 export type { StoredHousehold };

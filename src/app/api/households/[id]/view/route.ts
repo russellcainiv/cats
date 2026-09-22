@@ -4,6 +4,8 @@ import { NextResponse } from 'next/server';
 import { getIdentity, verifyOwnership } from '@/server/access';
 import { findHousehold } from '@/server/db';
 import { selectView } from '@/domain/selectors';
+import { defaultCats, defaultHome } from '@/domain/save-schema';
+import type { WorldState } from '@/domain/state';
 
 export async function GET(request: Request) {
   const identity = await getIdentity(request);
@@ -24,11 +26,16 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'forbidden' }, { status: 403 });
   }
 
+  const state: WorldState = {
+    household: { id: h.id, ownerId: h.ownerId, name: h.name, seed: h.seed, revision: h.revision, createdAt: h.createdAt, launched: h.launched ?? false },
+    cats: h.cats ?? defaultCats(h.seed),
+    home: h.home ?? defaultHome(h.seed),
+    simMinute: h.simMinute ?? 0,
+  };
+
   return NextResponse.json({
     revision: h.revision,
     checksum: h.checksum,
-    view: selectView({
-      household: { id: h.id, ownerId: h.ownerId, name: h.name, seed: h.seed, revision: h.revision, createdAt: h.createdAt },
-    }),
+    view: selectView(state),
   });
 }

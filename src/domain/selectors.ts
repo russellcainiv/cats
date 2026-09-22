@@ -1,6 +1,5 @@
 // src/domain/selectors.ts
 // Read-only GameView for UI; rendering never changes the world.
-
 import { WorldState } from './state';
 
 export type GameView = {
@@ -11,7 +10,23 @@ export type GameView = {
     seed: string;
     revision: number;
     createdAt: number;
+    launched: boolean;
   };
+  cats: Record<string, {
+    id: string;
+    name: string;
+    position: { lotId: string; x: number; y: number };
+    lastRoute: { lotId: string; x: number; y: number }[];
+    needs: { hunger: number; energy: number; fun: number };
+    state: 'idle' | 'moving' | 'sleeping';
+  }>;
+  home: {
+    lotId: string;
+    width: number;
+    height: number;
+    blockedCells: { lotId: string; x: number; y: number }[];
+  };
+  simMinute: number;
 };
 
 export function selectView(state: WorldState): GameView {
@@ -23,6 +38,10 @@ export function selectView(state: WorldState): GameView {
       seed: state.household.seed,
       revision: state.household.revision,
       createdAt: state.household.createdAt,
+      launched: state.household.launched,
     },
+    cats: state.cats,
+    home: state.home,
+    simMinute: state.simMinute,
   };
 }

@@ -17,7 +17,23 @@ export type CommittedView = {
       seed: string;
       revision: number;
       createdAt: number;
+      launched: boolean;
     };
+    cats: Record<string, {
+      id: string;
+      name: string;
+      position: { lotId: string; x: number; y: number };
+      lastRoute: { lotId: string; x: number; y: number }[];
+      needs: { hunger: number; energy: number; fun: number };
+      state: string;
+    }>;
+    home: {
+      lotId: string;
+      width: number;
+      height: number;
+      blockedCells: { lotId: string; x: number; y: number }[];
+    };
+    simMinute: number;
   };
 };
 
@@ -35,8 +51,15 @@ function fixtureOwner(name: string): string {
  * Deterministic fixture: creates a unique test owner through the dev-only
  * issue-session endpoint, sets a real auth cookie, and navigates to the game.
  * Uses real backend storage — never synthesizes the asserted result.
+ *
+ * When autoCreateAndLaunch is true, also creates a household and launches
+ * the world so the playable cat canvas appears immediately.
  */
-export async function openScenario(page: Page, name: string): Promise<{ householdId: string; token: string }> {
+export async function openScenario(
+  page: Page,
+  name: string,
+  options?: { autoCreateAndLaunch?: boolean }
+): Promise<{ householdId: string; token: string }> {
   const ownerId = fixtureOwner(name);
 
   const tokenRes = await page.request.post(`${DEV_BASE}/api/dev/issue-session`, {
@@ -61,12 +84,49 @@ export async function openScenario(page: Page, name: string): Promise<{ househol
     sameSite: 'Lax',
   }]);
 
+  let householdId = '';
+
+  if (options?.autoCreateAndLaunch) {
+    // Create household via API (using Bearer token for auth).
+    const createRes = await page.request.post(`${DEV_BASE}/api/households`, {
+      data: JSON.stringify({ name: `Home of ${name}` }),
+      headers: {
+        'Content-Type': 'application/json',
+        authorization: `Bearer ${token}`,
+      },
+    });
+    if (!createRes.ok()) {
+      const body = await createRes.text();
+      throw new Error(`openScenario: create-household failed ${createRes.status()}: ${body.slice(0, 200)}`);
+    }
+    const createData = (await createRes.json()) as { householdId: string };
+    householdId = createData.householdId;
+
+    // Launch the world.
+    const launchRes = await page.request.post(`${DEV_BASE}/api/households/${householdId}/command`, {
+      data: JSON.stringify({ type: 'launch-world', payload: {} }),
+      headers: {
+        'Content-Type': 'application/json',
+        authorization: `Bearer ${token}`,
+      },
+    });
+    if (!launchRes.ok()) {
+      const body = await launchRes.text();
+      throw new Error(`openScenario: launch-world failed ${launchRes.status()}: ${body.slice(0, 200)}`);
+    }
+  }
+
   await page.goto('/game');
   await page.waitForURL('/game', { timeout: 10000 });
-  // Wait for the loading state to clear and the real UI to appear.
-  await page.waitForSelector('text=/Create household|Household ready/i', { timeout: 10000 });
 
-  return { householdId: '', token };
+  if (householdId) {
+    // Wait for the world canvas or HouseholdShell, depending on launched state.
+    await page.waitForSelector('text=/Move to garden|Enter home|Create household|Household ready/i', { timeout: 10000 });
+  } else {
+    await page.waitForSelector('text=/Create household|Household ready/i', { timeout: 10000 });
+  }
+
+  return { householdId, token };
 }
 
 /**

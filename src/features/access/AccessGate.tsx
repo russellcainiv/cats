@@ -3,11 +3,13 @@
 import { useState, useEffect } from 'react';
 import { CreateForm } from '@/features/access/CreateForm';
 import { HouseholdShell } from '@/features/access/HouseholdShell';
+import { WorldFeature } from '@/features/world/Feature';
 
 export function AccessGate() {
   const [ready, setReady] = useState(false);
   const [ownerId, setOwnerId] = useState<string | null>(null);
   const [householdId, setHouseholdId] = useState<string | null>(null);
+  const [launched, setLaunched] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -22,6 +24,7 @@ export function AccessGate() {
           if (!cancelled) {
             setOwnerId(data.ownerId ?? null);
             setHouseholdId(data.householdId ?? null);
+            setLaunched(data.launched ?? false);
             setReady(true);
           }
           return;
@@ -43,6 +46,7 @@ export function AccessGate() {
               if (!cancelled) {
                 setOwnerId(data.ownerId ?? null);
                 setHouseholdId(data.householdId ?? null);
+                setLaunched(data.launched ?? false);
                 setReady(true);
               }
               return;
@@ -81,6 +85,10 @@ export function AccessGate() {
         <p className="text-[#4a4a4a]">Loading your cats…</p>
       </div>
     );
+  }
+
+  if (householdId && launched) {
+    return <WorldFeature householdId={householdId} />;
   }
 
   if (householdId) {

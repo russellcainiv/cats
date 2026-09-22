@@ -11,7 +11,10 @@ import { v4 as uuidv4 } from 'uuid';
 
 function emptyState(): WorldState {
   return {
-    household: { id: '', ownerId: '', name: '', seed: '', revision: 0, createdAt: 0 },
+    household: { id: '', ownerId: '', name: '', seed: '', revision: 0, createdAt: 0, launched: false },
+    cats: {},
+    home: { lotId: '', width: 0, height: 0, blockedCells: [] },
+    simMinute: 0,
   };
 }
 
@@ -67,7 +70,7 @@ describe('checksums and envelopes', () => {
     const h = result.state.household;
     const env = {
       schemaVersion: SCHEMA_VERSION,
-      household: { id: h.id, ownerId: h.ownerId, name: h.name, seed: h.seed, revision: h.revision, createdAt: h.createdAt },
+      household: { id: h.id, ownerId: h.ownerId, name: h.name, seed: h.seed, revision: h.revision, createdAt: h.createdAt, launched: h.launched },
       checksum: '',
     };
     const checksum1 = computeChecksum(env);
