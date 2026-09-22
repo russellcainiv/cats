@@ -121,19 +121,28 @@ def handoff():
     print(f'PASS handoff: {len(data)} task plans; exact approved picture; local links resolve')
 
 def self_test():
-    reqs, data = load()
-    assert not graph_errors(data, reqs)
-    cases = []
-    broken = copy.deepcopy(data); broken.append(copy.deepcopy(broken[0])); cases.append(broken)
-    broken = copy.deepcopy(data); broken[1]['depends'] = [999]; cases.append(broken)
-    broken = copy.deepcopy(data); broken[0]['depends'] = [2]; cases.append(broken)
-    broken = copy.deepcopy(data)
-    for t in broken: t['requirements'] = [r for r in t['requirements'] if r != 'R25']
-    cases.append(broken)
-    broken = copy.deepcopy(data); broken[0]['criteria'] = []; cases.append(broken)
-    broken = copy.deepcopy(data); broken[0]['requirements'].append('R999'); cases.append(broken)
-    assert all(graph_errors(c, reqs) for c in cases), 'Validator accepted a broken manifest'
-    print(f'PASS self-test: {len(cases)} malformed manifests rejected')
+    reqs = [{'id': 'R1'}, {'id': 'R2'}]
+    def make_valid():
+        return [
+            {'id': 1, 'criteria': [1,2,3,4], 'depends': [], 'requirements': ['R1']},
+            {'id': 2, 'criteria': [1,2,3,4], 'depends': [1], 'requirements': ['R2']},
+        ]
+    assert not graph_errors(make_valid(), reqs)
+    broken = make_valid(); broken.append(broken[0])
+    assert 'duplicate ticket ID' in graph_errors(broken, reqs)
+    broken = make_valid(); broken[0]['criteria'] = []
+    assert 'ticket 1 lacks acceptance criteria' in graph_errors(broken, reqs)
+    broken = make_valid(); broken[1]['depends'] = [999]
+    assert 'ticket 2 missing dependency 999' in graph_errors(broken, reqs)
+    broken = make_valid(); broken[0]['depends'] = [2]
+    assert 'ticket 1 not in dependency order' in graph_errors(broken, reqs)
+    broken = make_valid(); broken[0]['requirements'].append('R999')
+    assert 'unknown requirement R999' in graph_errors(broken, reqs)
+    broken = make_valid(); broken[0]['requirements'] = []
+    assert 'uncovered requirement R1' in graph_errors(broken, reqs)
+    broken = make_valid(); broken[0]['depends'] = [2]; broken[1]['depends'] = [1]
+    assert 'dependency cycle' in graph_errors(broken, reqs)
+    print('PASS self-test: hardcoded malformed manifests rejected')
 
 def main():
     mode = sys.argv[1] if len(sys.argv) > 1 else 'all'
