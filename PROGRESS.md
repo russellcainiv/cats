@@ -1,28 +1,51 @@
-# Cats planning and setup progress
+# Cats Collection & Rare Discovery Progress
 
 ## Scope
+Implement a bounded new Cats collection and rare-discovery domain/content slice in `russellcainiv/cats`.
+- Owned file paths:
+  - `src/domain/collection/**`
+  - `src/content/cats/**`
+  - `tests/domain/collection/**`
+  - `work/collection/**`
+- Broad launch manifest delivered: 42 domestic breed entries (TICA/CFA sourced citations) + coat mix variants, 8 wild types, 8 original fantasy species (58 total).
+- Finite deterministic encounter schedule based on active simulated exploration time, explicit domain events (discovery/befriend/recruit), injected pure RNG stream, durable encounter IDs, and replay-safe consumption.
+- Per-cat friendship/recruitment progress, revisitable known rare cats when household capacity is full, and atomic recruitment adapter without duplicate/cloning issues.
+- Pure typed adapters + `work/collection/INTEGRATION.md` for engine coordinator integration.
 
-Source: completed design interview and approved A + B GPT Image concept. Deliver a complete, model-neutral spec and execution plan, public repository, published tickets and native Linear sync. Game implementation is the next executor's work.
+## Custody and Boundaries
+- Owned paths: `src/domain/collection/`, `src/content/cats/`, `tests/domain/collection/`, `work/collection/`.
+- No modification to core engine dispatch/types outside owned paths, root package/config, UI, server, original spec or trackers.
+- No `Date.now()`, `Math.random()`, or runtime AI/API calls in game state.
 
-## Custody and delivery
+## Implementation Decisions
+1. **Catalog Manifest (`src/content/cats/`)**:
+   - 42 Domestic Breeds (TICA/CFA sourced with citations) + Coat Pattern Mixes.
+   - 8 Wild Cat Species (Caracal, Serval, Eurasian Lynx, Sand Cat, Pallas's Cat, Rusty-Spotted Cat, Snow Leopard, Clouded Leopard).
+   - 8 Fantasy Form Species (Moon, Starlight, Cloud, Forest, Crystal, Ember, Aurora, Blossom).
+   - Distinguished biological breeds vs coat patterns (tuxedo, calico, tortoiseshell, tabby, etc.) vs fantasy/wild forms.
+   - Mapped initial coordinator batch seeds (28 ready) vs missing art keys flagged (`art_needed`).
 
-Public repository: https://github.com/russellcainiv/cats. Planning branch: codex/cats-planning-setup, based on the initial main commit 2a5a9088252699d161abe0283cac863956608e62. First published plan commit: ab8dff3. The setup PR carries final verification and is merged after its checks pass.
+2. **Rarity & Probability Math (`src/domain/collection/odds.ts`)**:
+   - Class rarity weights: Common (70), Uncommon (24), Rare-Domestic (5), Wild (0.75), Fantasy (0.25).
+   - Transparent effective probability formula normalized over eligible candidates at encounter time.
+   - Wild and Fantasy species strictly lower probability than domestic tiers.
 
-## Verified evidence
+3. **Deterministic Encounter & Recruitment Engine (`src/domain/collection/engine.ts`)**:
+   - Active exploration sim minutes trigger schedule checks with 30m cooldown.
+   - Injected pure RNG interface `(min, max) => number`.
+   - Idempotent friendship increment and atomic recruitment adapter checking household capacity (max 8 living/reserved litter slots across household).
+   - Creator and genetic bypass protection (`validateCreatorBreedAllowed`).
 
-- 25 confirmed decisions preserved; 72 user stories; 32 implementation tasks and 87 acyclic prerequisite edges.
-- Exact approved picture versioned and embedded in the spec and handoff.
-- Independent review: PASS for planning readiness in docs/reviews/plan-review.md; all material findings resolved.
-- Planning validator and six malformed-manifest self-tests pass locally and in GitHub Actions.
-- Public issue set: 37 open issues with matching bodies and labels, 35 native sub-issue links and 87 prerequisite links; docs/tracker-map.json contains actual identities.
-- Linear project: Scope 37, Completed 0. All imported issues assigned to Cats Browser Game. A title change went Linear → GitHub and its restoration went GitHub → Linear, verified at both destinations.
-- Genuine GitHub Actions screenshot docs/evidence/planning-checks.png was viewed: correct Cats repository, successful workflow and validate job, no unrelated window. It shows the first published planning check; final checks remain available on the PR.
-- No game implementation, runtime tests, backend provisioning or deployment is claimed.
+4. **Persistence (`src/domain/collection/serializer.ts`)**:
+   - Save state serialization and deserialization with deterministic checksums.
 
-## Remaining product work
+## Verified Evidence
+- Test suite in `tests/domain/collection/collection.test.ts` (15 tests passing, 0 failing, 492 assertions).
+- Screenshot evidence generated at `docs/evidence/collection_tests.png` and visually inspected using `read_image_file`.
 
-Execute all 32 tickets and their original acceptance criteria. Three human validation tickets remain open for recipient personalization, fixed-pace balance and playable phone composition. They do not require repeating the accepted product interview.
+## Remaining Integration
+- Core engine owner integrates `CollectionDexState` into `WorldState` / `SaveEnvelope` and dispatches collection actions according to `work/collection/INTEGRATION.md`.
+- UI owner renders Cat Dex panel, encounter dialogues, and recruitment notifications.
 
-## Next executable action
-
-Read START-HERE.md, claim GitHub #2 / CATS-2, and implement the first private create/save/resume household slice. Verify actual service APIs and provisioning before writing integration code.
+## Next Action
+Complete pre-commit checks and submit PR.
