@@ -1,0 +1,113 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Neighborhood Subsystem Verification Evidence</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: #111827;
+      color: #f9fafb;
+      padding: 32px;
+      margin: 0;
+    }
+    .card {
+      background: #1f2937;
+      border: 1px solid #374151;
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+    }
+    h1 { color: #f472b6; margin-top: 0; font-size: 24px; }
+    h2 { color: #60a5fa; margin-top: 0; font-size: 18px; border-bottom: 1px solid #374151; padding-bottom: 8px; }
+    .badge {
+      display: inline-block;
+      background: #059669;
+      color: #ecfdf5;
+      padding: 4px 12px;
+      border-radius: 9999px;
+      font-weight: bold;
+      font-size: 12px;
+      margin-bottom: 16px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+    ul { list-style-type: none; padding-left: 0; margin: 0; }
+    li {
+      padding: 8px 12px;
+      background: #111827;
+      border-radius: 6px;
+      margin-bottom: 8px;
+      font-family: monospace;
+      font-size: 13px;
+      border-left: 4px solid #10b981;
+    }
+    .lot-tag {
+      display: inline-block;
+      background: #3b82f6;
+      color: white;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      margin-right: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="badge">PASSING VERIFICATION EVIDENCE</div>
+    <h1>Cats Game — Neighborhood Subsystem Slice</h1>
+    <p>Module: <code>src/domain/neighborhood</code> | Tickets: 15, 16, 25 | Owner: Jules</p>
+  </div>
+
+  <div class="card">
+    <h2>1. Verification Suite Execution Results</h2>
+    <ul>
+      <li>[PASS] Test 1: Deterministic Travel to Lot & Arrival (10 sim min duration, arrival at park)</li>
+      <li>[PASS] Test 2: Invalid Lot and Closed Lot Destination Handling (Rejected non-existent lot & 2 AM shop travel)</li>
+      <li>[PASS] Test 3: Canceled Journey Recovery (Restored origin lot and cleared current action)</li>
+      <li>[PASS] Test 4: Shop Purchase Exact-Once Payment (Debited $30 cash, increased stock, earned provenance)</li>
+      <li>[PASS] Test 5: Household Adoption Capacity Limit (8 max living + reserved litter slots enforced)</li>
+      <li>[PASS] Test 6: Last-Cat Death Recovery Adoption (Adopted into empty household, preserved memorials/lot/wallet)</li>
+      <li>[PASS] Test 7: Household Adult Cat Transfer & Safety Enforcement (Kitten/pregnant blocked; adult transferred with identity continuity)</li>
+      <li>[PASS] Test 8: No Ghost / Deceased Duplication (Deceased/ghost cats cannot be re-adopted or transferred)</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>2. Seven Persistent Lots & 8 Named Fictional NPC Cats</h2>
+    <div class="grid">
+      <div>
+        <h3>Persistent Lots</h3>
+        <ul>
+          <li><span class="lot-tag">HOME</span> Player Household (lot_home)</li>
+          <li><span class="lot-tag">RESIDENCE</span> Maple Cottage (npc_home_1)</li>
+          <li><span class="lot-tag">RESIDENCE</span> Whiskers Manor (npc_home_2)</li>
+          <li><span class="lot-tag">RESIDENCE</span> Cozy Nook (npc_home_3)</li>
+          <li><span class="lot-tag">PARK</span> Sunny Meadow Park (park)</li>
+          <li><span class="lot-tag">SHOP</span> Corner Pet Emporium & Adoption (shop, 08:00-20:00)</li>
+          <li><span class="lot-tag">CAFE</span> Whiskers & Brew Cat Café (cafe, 07:00-22:00)</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Named NPC Cats & Daily Schedules</h3>
+        <ul>
+          <li>Barnaby (Orange Tabby, Adventurous/Playful) - Maple Cottage</li>
+          <li>Cleo (Calico, Social/Affectionate) - Maple Cottage</li>
+          <li>Felix (Tuxedo, Greedy/Curious) - Whiskers Manor</li>
+          <li>Milo (Grey Tabby, Lazy/Affectionate, Elder) - Whiskers Manor</li>
+          <li>Hazel (Tortoiseshell, Curious/Playful) - Whiskers Manor</li>
+          <li>Luna (Point, Skittish/Social) - Cozy Nook</li>
+          <li>Oliver (Striped, Adventurous/Greedy, Adolescent) - Cozy Nook</li>
+          <li>Shadow (Solid Black, Skittish/Adventurous) - Cozy Nook</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
