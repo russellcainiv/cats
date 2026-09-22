@@ -6,9 +6,11 @@ import json
 from pathlib import Path
 import re
 import sys
+import functools
 
 ROOT = Path(__file__).resolve().parents[1]
 
+@functools.lru_cache(maxsize=None)
 def read(name):
     path = ROOT / name
     assert path.is_file(), f"Missing file: {name}"
