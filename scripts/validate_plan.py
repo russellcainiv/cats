@@ -9,10 +9,14 @@ import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 
-def read(name):
+def read(name, _cache={}):
+    if name in _cache:
+        return _cache[name]
     path = ROOT / name
     assert path.is_file(), f"Missing file: {name}"
-    return path.read_text()
+    content = path.read_text()
+    _cache[name] = content
+    return content
 
 def graph_errors(tickets, requirements):
     errors = []
