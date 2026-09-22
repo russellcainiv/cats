@@ -22,17 +22,32 @@ def api(path, *args):
 def existing():
     return {i['title']: i for i in api(f'repos/{REPO}/issues?state=all&per_page=100') if 'pull_request' not in i}
 
+def get_tickets():
+    global _TICKETS
+    if _TICKETS is None:
+        _TICKETS = json.loads((ROOT/'docs/tickets.json').read_text())['tickets']
+    return _TICKETS
+
+_TICKETS = None
+
 def specs():
-    manifest = json.loads((ROOT/'docs/tickets.json').read_text())['tickets']
+    manifest = get_tickets()
     result = [{'key':'spec','title':'Cats — complete game specification and implementation roadmap','body':'.scratch/cats/publish/spec.md','labels':['kind:spec','ready-for-agent','priority:high','area:simulation','area:building','area:art','area:platform','area:ux','area:content']}]
     for t in manifest:
-        n=t['id']; area='area:simulation'
-        if n in [1,3,29,32]: area='area:platform'
-        if n in [7,8,9,10]: area='area:building'
-        if n in [15,16,24]: area='area:content'
-        if n in [26,28]: area='area:ux'
-        if n==27: area='area:art'
-        if n in [30,31]: area='area:qa'
+        n=t['id']
+        area='area:simulation'
+        if n in [1,3,29,32]:
+            area='area:platform'
+        if n in [7,8,9,10]:
+            area='area:building'
+        if n in [15,16,24]:
+            area='area:content'
+        if n in [26,28]:
+            area='area:ux'
+        if n==27:
+            area='area:art'
+        if n in [30,31]:
+            area='area:qa'
         result.append({'key':f'task-{n:02d}','title':f"[Cats {n:02d}] {t['title']}",'body':f".scratch/cats/publish/{n:02d}-{t['slug']}.md",'labels':['kind:feature','ready-for-agent',area,'priority:high' if n in [1,3,19,21,29,31,32] else 'priority:normal']})
     result.append({'key':'map','title':'Cats — decisions to validate during implementation','body':'.scratch/cats/publish/map.md','labels':['wayfinder:map','needs-info','priority:normal']})
     for slug,title,kind in [('01-recipient','Personalize the gift using her real cats','grilling'),('02-balance','Validate the fixed lifespan and household economy','prototype'),('03-phone-art','Approve the playable phone composition','prototype')]:
@@ -46,22 +61,25 @@ def create():
             print('exists',item['key'],found[item['title']]['number'],flush=True)
             continue
         args=['/opt/homebrew/bin/gh-axi','issue','create','--repo',REPO,'--title',item['title'],'--body-file',item['body']]
-        for label in item['labels']: args += ['--label',label]
+        for label in item['labels']:
+            args += ['--label',label]
         command(args)
         print('created',item['key'],flush=True)
         time.sleep(1)
 
 def registry():
-    found=existing(); mapping={}
+    found=existing()
+    mapping={}
     for item in specs():
         issue=found.get(item['title'])
-        if not issue: raise RuntimeError('Missing '+item['key'])
+        if not issue:
+            raise RuntimeError('Missing '+item['key'])
         mapping[item['key']]={'number':issue['number'],'id':issue['id'],'url':issue['html_url'],'title':issue['title']}
     return {'repository':BASE,'github':mapping}
 
 def relations():
     mapping=registry()['github']
-    data=json.loads((ROOT/'docs/tickets.json').read_text())['tickets']
+    data=get_tickets()
     for parent_key,children in [('spec',[f'task-{t["id"]:02d}' for t in data]),('map',['01-recipient','02-balance','03-phone-art'])]:
         parent=mapping[parent_key]
         old={i['id'] for i in api(f'repos/{REPO}/issues/{parent["number"]}/sub_issues?per_page=100')}
@@ -82,10 +100,12 @@ def relations():
         print('dependencies verified',t['id'],len(t['depends']),flush=True)
 
 def verify():
-    found=existing(); mapping=registry()['github']; data=json.loads((ROOT/'docs/tickets.json').read_text())['tickets']
+    found=existing()
+    mapping=registry()['github']
+    data=get_tickets()
     for item in specs():
         issue=found[item['title']]
-        labels={l['name'] for l in issue['labels']}
+        labels={label['name'] for label in issue['labels']}
         assert set(item['labels']) <= labels, ('labels', item['key'])
         assert issue['state']=='open', ('premature closure',item['key'])
         assert issue['body'].strip() == (ROOT/item['body']).read_text().strip(), ('body drift',item['key'])
@@ -102,5 +122,7 @@ def verify():
 
 if __name__=='__main__':
     mode=sys.argv[1]
-    if mode=='registry': print(json.dumps(registry(),indent=2))
-    else: {'create':create,'relations':relations,'verify':verify}[mode]()
+    if mode=='registry':
+        print(json.dumps(registry(),indent=2))
+    else:
+        {'create':create,'relations':relations,'verify':verify}[mode]()
