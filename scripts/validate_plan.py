@@ -91,8 +91,9 @@ def tickets():
     for t in data:
         name = f".scratch/cats/issues/{t['id']:02d}-{t['slug']}.md"
         text = read(name)
+        text_lower = text.lower()
         for marker in ['**What to build:**', '**Blocked by:**', '**Status:** ready-for-agent', '## Acceptance criteria', '## Verification', 'independent blind review']:
-            assert marker.lower() in text.lower(), f'{name}: {marker}'
+            assert marker.lower() in text_lower, f'{name}: {marker}'
         for criterion in t['criteria']:
             assert criterion in text, f'{name}: manifest criterion missing'
         assert len(re.findall(r'^- \[ \]', text, re.M)) >= len(t['criteria'])
