@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Idempotently publish the authorized Cats plan. Never close an issue."""
+import functools
 import json
 from pathlib import Path
 import subprocess
@@ -19,6 +20,7 @@ def command(args):
 def api(path, *args):
     return json.loads(command(['gh', 'api', path, *args]))
 
+@functools.lru_cache(maxsize=1)
 def existing():
     return {i['title']: i for i in api(f'repos/{REPO}/issues?state=all&per_page=100') if 'pull_request' not in i}
 
