@@ -75,8 +75,9 @@ def spec():
     assert len(stories) >= 40, f'Insufficient user-story coverage: {len(stories)}'
     for story in stories:
         assert ', I want ' in story and ', so that ' in story, f'Story format: {story}'
+    text_lower = text.lower()
     for phrase in ['Moo-Moo', 'proposed', 'eight', 'ghost', 'free-build']:
-        assert phrase.lower() in text.lower(), phrase
+        assert phrase.lower() in text_lower, phrase
     assert 'approved-direction.png' in text
     for name in ['docs/architecture.md', 'docs/contracts.md', 'docs/adr/0001-simulation-and-saves.md']:
         assert len(read(name)) > 500
@@ -91,8 +92,9 @@ def tickets():
     for t in data:
         name = f".scratch/cats/issues/{t['id']:02d}-{t['slug']}.md"
         text = read(name)
+        text_lower = text.lower()
         for marker in ['**What to build:**', '**Blocked by:**', '**Status:** ready-for-agent', '## Acceptance criteria', '## Verification', 'independent blind review']:
-            assert marker.lower() in text.lower(), f'{name}: {marker}'
+            assert marker.lower() in text_lower, f'{name}: {marker}'
         for criterion in t['criteria']:
             assert criterion in text, f'{name}: manifest criterion missing'
         assert len(re.findall(r'^- \[ \]', text, re.M)) >= len(t['criteria'])
